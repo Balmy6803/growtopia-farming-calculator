@@ -41,7 +41,7 @@ Supports level 1 through 6 progression with mutual exclusion logic:
 * **Yellow Ancestor (Ancestral Totem of Wisdom):** +5% to +10% chance of receiving double XP per farming action.
 
 ### 5. Equipment Modifiers and Active Effects
-* **American Sports Ball Jersey:** 10% bonus gems on smashing (locks Red Ancestor).
+* **American Sports Ball Jersey:** 10% bonus gems on smashing (cannot be used with Red Ances).
 * **Buddy Block Head:** 2% bonus block drop chance.
 * **Cosmic Cape:** 0.001% (1 in 100,000) Comet Dust drop rate per smashed block.
 * **Dreamcatcher Staff:** 2% bonus harvest blocks for items with Rarity < 100.
@@ -60,7 +60,7 @@ Supports level 1 through 6 progression with mutual exclusion logic:
 
 ## Mathematical Specifications & Engine Logic
 
-All calculations simulate statistical expected values derived from verified game mechanics.
+All calculations simulate estimated values derived from sources from the Growtopia Wiki, Reddit threads, and Youtube videos.
 
 ### 1. Tree Growth Duration
 Growth time in seconds ($T$) as a function of item rarity ($R$):
