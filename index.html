@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growtopia Farm Calculator</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel Standalone for JSX Parsing in Browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* Custom Scrollbar for Cycle Table */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-black">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    // ==========================================
+    // INLINE SVG ICONS (Zero external icon dependencies)
+    // ==========================================
+    const IconSprout = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M7 20h10" /><path d="M10 20c5.5-2.5.8-6.4 3-10" /><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z" /><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z" />
+      </svg>
+    );
+
+    const IconGem = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 3h12l4 6-10 12L2 9z" /><path d="M11 3 8 9l4 12 4-12-3-6" /><path d="M2 9h20" />
+      </svg>
+    );
+
+    const IconCoins = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18" /><path d="M7 6h1v4" /><path d="m16.71 13.88.7.71-2.82 2.82" />
+      </svg>
+    );
+
+    const IconClock = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+      </svg>
+    );
+
+    const IconZap = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+    );
+
+    const IconAward = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="8" r="6" /><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+      </svg>
+    );
+
+    const IconLayers = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" />
+      </svg>
+    );
+
+    const IconTable = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 3v18" /><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" />
+      </svg>
+    );
+
+    const IconTrendingUp = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" />
+      </svg>
+    );
+
+    const IconRotateCcw = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />
+      </svg>
+    );
+
+    const IconDownload = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" />
+      </svg>
+    );
+
+    const IconCopy = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+      </svg>
+    );
+
+    const IconCheck = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    );
+
+    const IconOrbit = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3" /><circle cx="19" cy="5" r="2" /><circle cx="5" cy="19" r="2" /><path d="M10.4 21.9a10 10 0 0 0 9.94-8.4" /><path d="M13.6 2.1a10 10 0 0 0-9.94 8.4" />
+      </svg>
+    );
+
+    const IconAlertCircle = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" />
+      </svg>
+    );
+
+    const IconHammer = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9" /><path d="M17.64 15 22 10.64" /><path d="m20.91 3.26-6.36 6.36" /><path d="m18.08 7.51-2.12-2.12" /><path d="m13.84 3.26 2.12 2.12" />
+      </svg>
+    );
+
+    const IconUserCheck = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" />
+      </svg>
+    );
+
+    const IconSearch = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+    );
+
+    const IconX = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    );
+
+    // ==========================================
+    // PRESET DATABASE: COMMON FARMABLES
+    // ==========================================
+    const COMMON_FARMABLES = Object.freeze([
+      { name: 'Rice', rarity: 23, maxFruit: 8, avgSeedGain: 28 },
+      { name: 'Sugar Cane', rarity: 24, maxFruit: 8, avgSeedGain: 25 },
+      { name: 'Ladder', rarity: 26, maxFruit: 8, avgSeedGain: 25 },
+      { name: 'Sheet Music: Sharp Bass', rarity: 32, maxFruit: 8, avgSeedGain: 22 },
+      { name: 'Steel Block', rarity: 35, maxFruit: 8, avgSeedGain: 22 },
+      { name: 'Steam Tubes', rarity: 36, maxFruit: 8, avgSeedGain: 20 },
+      { name: 'Golden Block', rarity: 41, maxFruit: 8, avgSeedGain: 18 },
+      { name: 'Venus Guytrap', rarity: 41, maxFruit: 8, avgSeedGain: 18 },
+      { name: 'Hanging Guytrap', rarity: 41, maxFruit: 8, avgSeedGain: 18 },
+      { name: 'Blackrock Wall', rarity: 42, maxFruit: 8, avgSeedGain: 18 },
+      { name: 'Fish Tank', rarity: 42, maxFruit: 8, avgSeedGain: 18 },
+      { name: 'Lovewillow\'s Lace', rarity: 42, maxFruit: 8, avgSeedGain: 18 },
+      { name: 'Space Connector', rarity: 43, maxFruit: 8, avgSeedGain: 18 },
+      { name: 'Starship Light Wall', rarity: 45, maxFruit: 8, avgSeedGain: 18 },
+      { name: 'Pepper Tree', rarity: 47, maxFruit: 8, avgSeedGain: 18 },
+      { name: 'Starship Floor Grill', rarity: 51, maxFruit: 8, avgSeedGain: 16 },
+      { name: 'Pinball Bumper', rarity: 53, maxFruit: 8, avgSeedGain: 16 },
+      { name: 'Treasure Chest', rarity: 55, maxFruit: 8, avgSeedGain: 16 },
+      { name: 'Director\'s Chair', rarity: 64, maxFruit: 8, avgSeedGain: 14 },
+      { name: 'Laser Grid', rarity: 68, maxFruit: 8, avgSeedGain: 14 },
+      { name: 'High Tech Block', rarity: 69, maxFruit: 8, avgSeedGain: 14 },
+      { name: 'Roshambo Block', rarity: 71, maxFruit: 8, avgSeedGain: 14 },
+      { name: 'Chandelier', rarity: 87, maxFruit: 8, avgSeedGain: 12 },
+      { name: 'Sorcerer Stone', rarity: 87, maxFruit: 8, avgSeedGain: 12 },
+      { name: 'Magic Bell', rarity: 95, maxFruit: 8, avgSeedGain: 10 },
+      { name: 'Clouds Background', rarity: 119, maxFruit: 8, avgSeedGain: 10 },
+    ]);
+
+    // ==========================================
+    // 1. ENGINE & CALCULATION LOGIC
+    // ==========================================
+
+    const BASE_RATES = Object.freeze({
+      harvester: 0.10,         // 10% extra harvest blocks from Harvester / Harvester of Sorrows (rarity < 100)
+      elock: 0.10,             // 10% chance of adding an extra gem drop when breaking blocks
+      cosmicCape: 0.00001,     // 0.001% chance of Comet Dust per smashed block (0.001 / 100)
+      galaxySkin: 0.10,        // 10% extra blocks from Galaxy Skin
+      winterWishingStar: 0.02, // 2% extra blocks from Winter Wishing Star
+      jersey: 0.10,            // 10% extra gems from American Sports Ball Jersey
+      blockGems: 8 / 12,       // Block drop rates
+      blockBlocks: 1 / 12,
+      blockSeeds: 3 / 12,
+      clover: Object.freeze({
+        blockChance: 0.10,          // 10% chance for an extra block to be dropped
+        gemChance: 0.10,            // 10% chance to multiply gem drops by up to 5
+        gemAvgBonusMultiplier: 2.0, // Expected bonus: average multiplier is 3x (1x-5x), giving +2x bonus gems on trigger
+      }),
+      buddy: 0.02,             // 2% Buddy Block Head rate
+      dcs: 0.02,               // 2% Dreamcatcher Staff rate (rarity < 100)
+    });
+
+    const GrowtopiaMath = {
+      getBlockYieldMultiplier(maxblock) {
+        const mb = String(maxblock);
+        if (mb === '2') return 1.5 * 2.5;     // 3.75 (Farmable)
+        if (mb === '3') return 2.0 * 2.5;     // 5.00 (Very farmable)
+        if (mb === '4') return 2.5 * 2.5;     // 6.25 (Super farmable)
+        return 1.0 * 2.5;                     // 2.50 (Not farmable)
+      },
+
+      getGemBaseYield(rarity) {
+        return rarity > 30 ? rarity / 9 : rarity / 13.5;
+      },
+
+      getGrowingTimeSeconds(rarity) {
+        return rarity * (rarity * rarity + 30);
+      },
+
+      getXpPerAction(rarity) {
+        return 1 + Math.floor(rarity / 5);
+      },
+
+      getFarmerBonusRate(level) {
+        const lvl = Number(level) || 1;
+        if (lvl >= 10) return 0.03;     // Level 10: 3%
+        if (lvl >= 8) return 0.02;      // Levels 8-9: 2%
+        if (lvl >= 6) return 0.015;     // Levels 6-7: 1.5%
+        if (lvl >= 4) return 0.01;      // Levels 4-5: 1%
+        if (lvl >= 2) return 0.005;     // Levels 2-3: 0.5%
+        return 0;                       // Level 1: 0%
+      },
+
+      getBuilderBonusRate(level) {
+        const lvl = Number(level) || 1;
+        if (lvl >= 10) return 0.03;     // Level 10: 3%
+        if (lvl >= 8) return 0.02;      // Levels 8-9: 2%
+        if (lvl >= 6) return 0.015;     // Levels 6-7: 1.5%
+        if (lvl >= 4) return 0.01;      // Levels 4-5: 1%
+        if (lvl >= 2) return 0.005;     // Levels 2-3: 0.5%
+        return 0;                       // Level 1: 0%
+      },
+
+      formatDuration(totalSeconds) {
+        if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return '0s';
+
+        let sec = Math.floor(totalSeconds);
+        const d = Math.floor(sec / 86400);
+        sec %= 86400;
+        const h = Math.floor(sec / 3600);
+        sec %= 3600;
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+
+        const parts = [];
+        if (d > 0) parts.push(`${d}d`);
+        if (h > 0) parts.push(`${h}h`);
+        if (m > 0) parts.push(`${m}m`);
+        if (s > 0 || parts.length === 0) parts.push(`${s}s`);
+
+        return parts.join(' ');
+      },
+    };
+
+    function precomputeSimulationContext(inputs) {
+      const rarity = Number(inputs.rarity) || 0;
+      const rawLvl = Number(inputs.lvl) || 1;
+      const lvl = Math.min(6, Math.max(1, rawLvl)); // Ancestor artifacts cap at Level 6
+      const artifact = inputs.artifact || null;
+
+      const seedHarvestRate = (rarity + 12 > 0) ? (4 / (rarity + 12)) : 0;
+      const blockYieldRate = GrowtopiaMath.getBlockYieldMultiplier(inputs.maxblock);
+      const gemBaseYield = GrowtopiaMath.getGemBaseYield(rarity);
+      const xpPerAction = GrowtopiaMath.getXpPerAction(rarity);
+
+      let growthSeconds = GrowtopiaMath.getGrowingTimeSeconds(rarity);
+      // Green Ances: Lv 1 (2%), Lv 2 (4%), Lv 3 (6%), Lv 4 (8%), Lv 5 (10%), Lv 6 (12%)
+      if (artifact === 'seed') {
+        const seedBonus = (lvl * 2) / 100;
+        growthSeconds *= (1 - seedBonus);
+      }
+
+      // Role Up bonus rates
+      const farmerBonusRate = inputs.farmerRole ? GrowtopiaMath.getFarmerBonusRate(inputs.farmerLevel) : 0;
+      const builderBonusRate = inputs.builderRole ? GrowtopiaMath.getBuilderBonusRate(inputs.builderLevel) : 0;
+
+      let smashDenominator = 1 - BASE_RATES.blockBlocks;
+
+      // Blue Ances: Lv 1 (5%), Lv 2 (6%), Lv 3 (7%), Lv 4 (8%), Lv 5 (9%), Lv 6 (10%)
+      if (artifact === 'tesseract') {
+        const tesseractBonus = (4 + lvl) / 100;
+        smashDenominator *= (1 - tesseractBonus);
+      }
+      if (inputs.buddy) {
+        smashDenominator *= (1 - BASE_RATES.buddy);
+      }
+      if (inputs.winterWishingStar) {
+        smashDenominator *= (1 - BASE_RATES.winterWishingStar);
+      }
+      if (inputs.galaxySkin) {
+        smashDenominator *= (1 - BASE_RATES.galaxySkin);
+      }
+      // Lucky Clover / Songpyeon: 10% chance for an extra block to be dropped
+      if (inputs.clover) {
+        smashDenominator *= (1 - BASE_RATES.clover.blockChance);
+      }
+      // Builder Role double block drop factor
+      if (builderBonusRate > 0) {
+        smashDenominator *= (1 - builderBonusRate);
+      }
+
+      const compoundSmashMultiplier = smashDenominator > 0 ? (1 / smashDenominator) : 1;
+
+      // Harvester only activates if equipped AND the item rarity is strictly below 100
+      const isHarvesterActive = Boolean(inputs.harvester && rarity < 100);
+      const harvesterRate = isHarvesterActive ? BASE_RATES.harvester : 0;
+
+      // Dreamcatcher Staff only activates if equipped AND the item rarity is strictly below 100
+      const isDcsActive = Boolean(inputs.dcs && rarity < 100);
+      const dcsRate = isDcsActive ? BASE_RATES.dcs : 0;
+
+      // Emerald Lock: 10% chance of adding an extra gem drop when breaking blocks (+0.10 gems / block)
+      const elockRate = inputs.elock ? BASE_RATES.elock : 0;
+      const cosmicCapeRate = inputs.cosmicCape ? BASE_RATES.cosmicCape : 0;
+
+      // Lucky Clover / Songpyeon gem bonus
+      const cloverGemBonus = inputs.clover 
+        ? (gemBaseYield * BASE_RATES.blockGems * BASE_RATES.clover.gemChance * BASE_RATES.clover.gemAvgBonusMultiplier) 
+        : 0;
+
+      // Red Ances: Lv 1 (5%), Lv 2 (6%), Lv 3 (7%), Lv 4 (8%), Lv 5 (9%), Lv 6 (10%)
+      let lensGemRate = 0;
+      if (artifact === 'lens' && !inputs.jersey) {
+        const lensBonus = (4 + lvl) / 100;
+        lensGemRate = gemBaseYield * BASE_RATES.blockGems * lensBonus;
+      }
+
+      // American Sports Ball Jersey: 10% chance to receive extra gems scaled with rarity
+      let jerseyGemRate = 0;
+      if (inputs.jersey && artifact !== 'lens') {
+        jerseyGemRate = gemBaseYield * BASE_RATES.blockGems * BASE_RATES.jersey;
+      }
+
+      // Yellow Ances: Lv 1 (5%), Lv 2 (6%), Lv 3 (7%), Lv 4 (8%), Lv 5 (9%), Lv 6 (10%) double XP chance
+      let totemXpMultiplier = 0;
+      if (artifact === 'totem') {
+        const totemBonus = (4 + lvl) / 100;
+        totemXpMultiplier = xpPerAction * totemBonus;
+      }
+
+      return {
+        rarity,
+        seedHarvestRate,
+        blockYieldRate,
+        gemBaseYield,
+        xpPerAction,
+        growthSeconds,
+        compoundSmashMultiplier,
+        harvesterRate,
+        isHarvesterActive,
+        dcsRate,
+        isDcsActive,
+        farmerBonusRate,
+        builderBonusRate,
+        elockRate,
+        cosmicCapeRate,
+        jerseyGemRate,
+        cloverGemBonus,
+        lensGemRate,
+        totemXpMultiplier,
+      };
+    }
+
+    function calculateFarming(inputs) {
+      const ctx = precomputeSimulationContext(inputs);
+      const maxCapacity = Number(inputs.maximum) > 0 ? Number(inputs.maximum) : Infinity;
+
+      let currentSeeds = Math.min(Math.max(0, Number(inputs.seeds) || 0), maxCapacity);
+      let currentBlocks = Math.max(0, Number(inputs.blocks) || 0) + Math.max(0, Number(inputs.cycleblocks) || 0);
+      const cycleBlocksInput = Math.max(0, Number(inputs.cycleblocks) || 0);
+
+      const cycles = [];
+      const extras = [];
+
+      const totals = {
+        seeds: 0,
+        netSeedGain: 0,
+        blocks: 0,
+        gems: 0,
+        dust: 0,
+        xp: 0,
+        timeSeconds: 0,
+        worldLocks: 0,
+      };
+
+      const seedToWlRate = Number(inputs.seedswl) > 0 ? 1 / Number(inputs.seedswl) : 0;
+      const gemToWlRate = Number(inputs.gemwl) > 0 ? 1 / Number(inputs.gemwl) : 0;
+      const dustToWlRate = Number(inputs.dustwl) > 0 ? 1 / Number(inputs.dustwl) : 0;
+      const totalCycles = Math.max(0, Math.floor(Number(inputs.times) || 0));
+
+      for (let i = 0; i < totalCycles; i++) {
+        const cycleStartSeeds = Math.min(currentSeeds, maxCapacity);
+
+        // Harvest drops
+        const harvestedSeeds = cycleStartSeeds * ctx.seedHarvestRate;
+        const baseHarvestBlocks = cycleStartSeeds * ctx.blockYieldRate;
+        const harvesterExtraBlocks = baseHarvestBlocks * ctx.harvesterRate;
+        const dcsExtraBlocks = cycleStartSeeds * ctx.dcsRate;
+
+        const totalHarvestedBlocks = baseHarvestBlocks + harvesterExtraBlocks + dcsExtraBlocks;
+
+        // Initial blocks + smashing loop resolved via compound multiplier
+        const effectiveBlocks = (totalHarvestedBlocks + currentBlocks) * ctx.compoundSmashMultiplier;
+
+        // Seeds from smashing blocks (1 seed per 4 smashed blocks)
+        const finalSeeds = harvestedSeeds + (effectiveBlocks * 0.25);
+
+        // Gems
+        const baseHarvestGems = ctx.gemBaseYield * cycleStartSeeds;
+        const farmerHarvestBonusGems = baseHarvestGems * ctx.farmerBonusRate;
+        const baseSmashGems = ctx.gemBaseYield * BASE_RATES.blockGems * effectiveBlocks;
+
+        const bonusGems = farmerHarvestBonusGems +
+                          (effectiveBlocks * ctx.elockRate) +
+                          (effectiveBlocks * ctx.cloverGemBonus) +
+                          (effectiveBlocks * ctx.lensGemRate) +
+                          (effectiveBlocks * ctx.jerseyGemRate);
+        const cycleGems = baseHarvestGems + baseSmashGems + bonusGems;
+
+        // Comet Dust Drops (from Cosmic Cape)
+        const cycleDust = effectiveBlocks * ctx.cosmicCapeRate;
+
+        // XP
+        const baseActions = cycleStartSeeds + effectiveBlocks;
+        const cycleXp = (baseActions * ctx.xpPerAction) + (baseActions * ctx.totemXpMultiplier);
+
+        // WL Calculations (Seeds + Gems + Comet Dust)
+        const netSeedProfit = finalSeeds - cycleStartSeeds;
+        const cycleWls = (Math.max(0, netSeedProfit) * seedToWlRate) + 
+                         (cycleGems * gemToWlRate) + 
+                         (cycleDust * dustToWlRate);
+
+        // Running totals
+        totals.netSeedGain += netSeedProfit;
+        totals.blocks += effectiveBlocks;
+        totals.gems += Math.floor(cycleGems);
+        totals.dust += cycleDust;
+        totals.xp += Math.floor(cycleXp);
+        totals.timeSeconds += ctx.growthSeconds;
+        totals.worldLocks += cycleWls;
+
+        cycles.push({
+          cycle: i + 1,
+          startSeeds: Math.floor(cycleStartSeeds),
+          endSeeds: Math.floor(finalSeeds),
+          seedProfit: Math.floor(netSeedProfit),
+          blocksSmashed: Math.floor(effectiveBlocks),
+          gems: Math.floor(cycleGems),
+          cometDust: Number(cycleDust.toFixed(4)),
+          xp: Math.floor(cycleXp),
+          worldLocks: Number(cycleWls.toFixed(2)),
+        });
+
+        if (inputs.extras) {
+          extras.push({
+            cycle: i + 1,
+            totalNetSeeds: Math.floor(totals.netSeedGain),
+            totalGems: totals.gems,
+            totalDust: Number(totals.dust.toFixed(4)),
+            totalWls: Number(totals.worldLocks.toFixed(2)),
+          });
+        }
+
+        currentSeeds = Math.min(finalSeeds, maxCapacity);
+        currentBlocks = cycleBlocksInput;
+      }
+
+      totals.seeds = Math.floor(currentSeeds);
+      totals.worldLocks = Number(totals.worldLocks.toFixed(2));
+      totals.formattedTime = GrowtopiaMath.formatDuration(totals.timeSeconds);
+
+      return {
+        ctx,
+        totals,
+        cycles,
+        extras,
+      };
+    }
+
+    // ==========================================
+    // 2. MAIN APPLICATION COMPONENT
+    // ==========================================
+
+    function App() {
+      const [inputs, setInputs] = useState({
+        seeds: 2500,
+        blocks: 0,
+        cycleblocks: 0,
+        rarity: 0,
+        times: 0,
+        maximum: 2500,
+        seedswl: 0,
+        gemwl: 0,
+        dustwl: 0,
+        lvl: 1,
+        artifact: 'none',
+        farmerRole: false,
+        farmerLevel: 1,
+        builderRole: false,
+        builderLevel: 1,
+        buddy: false,
+        dcs: false,
+        clover: false,
+        elock: false,
+        cosmicCape: false,
+        galaxySkin: false,
+        winterWishingStar: false,
+        jersey: false,
+        harvester: false,
+        maxblock: '2', // Farmable
+        extras: true,
+      });
+
+      const [selectedPreset, setSelectedPreset] = useState(null);
+      const [showPresetModal, setShowPresetModal] = useState(false);
+      const [presetSearch, setPresetSearch] = useState('');
+
+      const [activeTab, setActiveTab] = useState('summary');
+      const [copied, setCopied] = useState(false);
+
+      const result = useMemo(() => calculateFarming(inputs), [inputs]);
+
+      const updateField = (key, value) => {
+        setInputs(prev => {
+          const next = { ...prev, [key]: value };
+          if (key === 'jersey' && value === true && next.artifact === 'lens') {
+            next.artifact = 'none';
+          }
+          return next;
+        });
+      };
+
+      const handleSelectPreset = (preset) => {
+        setSelectedPreset(preset);
+        updateField('rarity', preset.rarity);
+        setShowPresetModal(false);
+      };
+
+      const handleResetPreset = () => {
+        setSelectedPreset(null);
+        updateField('rarity', 0);
+      };
+
+      const filteredPresets = useMemo(() => {
+        if (!presetSearch.trim()) return COMMON_FARMABLES;
+        const q = presetSearch.toLowerCase();
+        return COMMON_FARMABLES.filter(item => 
+          item.name.toLowerCase().includes(q) || String(item.rarity).includes(q)
+        );
+      }, [presetSearch]);
+
+      const resetToDefaults = () => {
+        setSelectedPreset(null);
+        setInputs({
+          seeds: 2500,
+          blocks: 0,
+          cycleblocks: 0,
+          rarity: 0,
+          times: 0,
+          maximum: 2500,
+          seedswl: 0,
+          gemwl: 0,
+          dustwl: 0,
+          lvl: 1,
+          artifact: 'none',
+          farmerRole: false,
+          farmerLevel: 1,
+          builderRole: false,
+          builderLevel: 1,
+          buddy: false,
+          dcs: false,
+          clover: false,
+          elock: false,
+          cosmicCape: false,
+          galaxySkin: false,
+          winterWishingStar: false,
+          jersey: false,
+          harvester: false,
+          maxblock: '2',
+          extras: true,
+        });
+      };
+
+      const handleCopySummary = () => {
+        const text = `--- Growtopia Farming Yield Summary ---
+Simulated Cycles: ${inputs.times}
+Item Rarity: ${inputs.rarity}
+Total Final Seeds: ${result.totals.seeds.toLocaleString()}
+Net Seed Profit: +${Math.floor(result.totals.netSeedGain).toLocaleString()}
+Total Gems Earned: ${result.totals.gems.toLocaleString()}
+Comet Dust Earned: ${result.totals.dust.toFixed(4)}
+Total XP: ${result.totals.xp.toLocaleString()}
+Total Profit: ${result.totals.worldLocks.toLocaleString()} WLs
+Total Growth Duration: ${result.totals.formattedTime}`;
+
+        // Robust fallback for iFrame clipboard restrictions
+        try {
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            });
+          }
+        }
+      };
+
+      const exportCSV = () => {
+        const headers = ['Cycle', 'Start Seeds', 'Final Seeds', 'Net Seed Gain', 'Blocks Smashed', 'Gems', 'Comet Dust', 'XP', 'WL Profit'];
+        const rows = result.cycles.map(c => [
+          c.cycle,
+          c.startSeeds,
+          c.endSeeds,
+          c.seedProfit,
+          c.blocksSmashed,
+          c.gems,
+          c.cometDust,
+          c.xp,
+          c.worldLocks,
+        ]);
+
+        const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `farm_simulation_rarity_${inputs.rarity}_cycles_${inputs.times}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <div className="min-h-screen p-3 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            
+            {/* TOP HEADER */}
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800/80 rounded-2xl p-5 shadow-2xl backdrop-blur">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  Growtopia Farming Calculator
+                </h1>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={handleCopySummary}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition"
+                  title="Copy summary to clipboard"
+                >
+                  {copied ? <IconCheck className="w-4 h-4 text-emerald-400" /> : <IconCopy className="w-4 h-4 text-slate-400" />}
+                  <span>{copied ? 'Copied!' : 'Copy Summary'}</span>
+                </button>
+                <button
+                  onClick={exportCSV}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition"
+                  title="Export cycle data to CSV"
+                >
+                  <IconDownload className="w-4 h-4 text-cyan-400" />
+                  <span>Export CSV</span>
+                </button>
+                <button
+                  onClick={resetToDefaults}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 transition"
+                  title="Reset all settings to default"
+                >
+                  <IconRotateCcw className="w-4 h-4" />
+                  <span>Reset</span>
+                </button>
+              </div>
+            </header>
+
+            {/* STACKED FULL-WIDTH SECTIONS */}
+            <div className="space-y-6">
+
+              {/* COMMON FARMABLES PRESET SECTION */}
+              <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800 flex-wrap gap-2">
+                  <div>
+                    <h2 className="text-sm font-bold text-white tracking-wide uppercase">Common Farmables Preset</h2>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowPresetModal(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl transition shadow-md shadow-emerald-500/20"
+                    >
+                      <span>Add:</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetPreset}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition"
+                    >
+                      <span>Reset</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Selected Preset Details / Status */}
+                {selectedPreset ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-emerald-950/25 border border-emerald-500/30 rounded-xl gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-white">{selectedPreset.name}</span>
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-semibold">
+                          Rarity: {selectedPreset.rarity}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap pt-0.5">
+                        <span>Max Fruit / Tree: <strong className="text-slate-200 font-mono">{selectedPreset.maxFruit}</strong></span>
+                        <span>•</span>
+                        <span>Avg Seed Gain / 200 Trees: <strong className="text-emerald-400 font-mono">+{selectedPreset.avgSeedGain}</strong></span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPresetModal(true)}
+                      className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 underline self-start sm:self-center"
+                    >
+                      Change Preset
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-slate-950/40 border border-dashed border-slate-800 rounded-xl text-center">
+                    <p className="text-xs text-slate-400">
+                      No farmable selected. Click <span className="text-emerald-400 font-semibold">"Add:"</span> to browse and select a preset.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* FARM STOCKS, CYCLES, AND FARMABILITY */}
+              <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div>
+                    <h2 className="text-sm font-bold text-white tracking-wide uppercase">Farm Stocks, Cycles, and Farmability</h2>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Initial Seeds */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Initial Seeds
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={inputs.seeds}
+                      onChange={(e) => updateField('seeds', Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono transition"
+                    />
+                  </div>
+
+                  {/* Farm Capacity (Max) */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Tree Capacity / Max
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={inputs.maximum}
+                      onChange={(e) => updateField('maximum', Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono transition"
+                    />
+                  </div>
+
+                  {/* Times (Cycles) */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Farming Cycles
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={inputs.times}
+                      onChange={(e) => updateField('times', Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono transition"
+                    />
+                  </div>
+
+                  {/* Item Rarity */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Item Rarity
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="200"
+                      value={inputs.rarity}
+                      onChange={(e) => updateField('rarity', Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  {/* Starting Extra Blocks */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Initial Extra Blocks
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={inputs.blocks}
+                      onChange={(e) => updateField('blocks', Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono transition"
+                    />
+                  </div>
+
+                  {/* Blocks per Cycle */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Blocks Added / Cycle
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={inputs.cycleblocks}
+                      onChange={(e) => updateField('cycleblocks', Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono transition"
+                    />
+                  </div>
+                </div>
+
+                {/* MaxBlock Tier Selection */}
+                <div className="pt-2">
+                  <label className="block text-xs font-medium text-slate-300 mb-1.5 flex items-center justify-between">
+                    <span>Harvest Yield Tier (Maxblock)</span>
+                    <span className="text-emerald-400 font-mono text-[11px]">
+                      {GrowtopiaMath.getBlockYieldMultiplier(inputs.maxblock).toFixed(2)}x Blocks / Tree
+                    </span>
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { val: '1', label: 'Not farmable' },
+                      { val: '2', label: 'Farmable' },
+                      { val: '3', label: 'Very farmable' },
+                      { val: '4', label: 'Super farmable' },
+                    ].map((tier) => (
+                      <button
+                        key={tier.val}
+                        type="button"
+                        onClick={() => updateField('maxblock', tier.val)}
+                        className={`py-2 px-2 rounded-xl text-xs font-semibold border transition text-center ${
+                          inputs.maxblock === tier.val
+                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-sm shadow-emerald-500/20'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        {tier.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2ND ROW: ECONOMY RATES (EXPANDED ACROSS SCREEN) */}
+              <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div>
+                    <h2 className="text-sm font-bold text-white tracking-wide uppercase">Economy Rates</h2>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Seeds per WL */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1 truncate" title="Seeds / WL">
+                      Seeds / WL
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={inputs.seedswl}
+                      onChange={(e) => updateField('seedswl', Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono transition"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">0 to ignore</p>
+                  </div>
+
+                  {/* Gems per WL */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1 truncate" title="Gems / WL">
+                      Gems / WL
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={inputs.gemwl}
+                      onChange={(e) => updateField('gemwl', Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono transition"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">0 to ignore</p>
+                  </div>
+
+                  {/* Comet Dust per WL */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1 truncate" title="Comet dust / WL">
+                      Comet dust / WL
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={inputs.dustwl}
+                      onChange={(e) => updateField('dustwl', Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono transition"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">0 to ignore</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3RD ROW: ROLE UP! SECTION (EXPANDED ACROSS SCREEN) */}
+              <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div>
+                    <h2 className="text-sm font-bold text-white tracking-wide uppercase">Role Up!</h2>
+                  </div>
+                </div>
+
+                {/* Role Toggle Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => updateField('farmerRole', !inputs.farmerRole)}
+                    className={`h-full min-h-[48px] py-2.5 px-3 rounded-xl text-xs font-medium border text-center flex items-center justify-center gap-2 transition leading-snug ${
+                      inputs.farmerRole
+                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-sm shadow-emerald-500/20'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <span className="font-bold">Farmer Role</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => updateField('builderRole', !inputs.builderRole)}
+                    className={`h-full min-h-[48px] py-2.5 px-3 rounded-xl text-xs font-medium border text-center flex items-center justify-center gap-2 transition leading-snug ${
+                      inputs.builderRole
+                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 shadow-sm shadow-cyan-500/20'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <span className="font-bold">Builder Role</span>
+                  </button>
+                </div>
+
+                {/* Role Level Sliders & Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                  {inputs.farmerRole ? (
+                    <div className="p-3.5 rounded-xl bg-slate-950 border border-emerald-500/30 space-y-2.5 transition">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-emerald-300 flex items-center gap-1.5">
+                          <IconSprout className="w-3.5 h-3.5 text-emerald-400" />
+                          Farmer Level: <span className="font-mono text-white text-sm">{inputs.farmerLevel}</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-mono font-semibold text-emerald-400">
+                          +{(GrowtopiaMath.getFarmerBonusRate(inputs.farmerLevel) * 100).toFixed(1)}% Harvest Gems
+                        </span>
+                      </div>
+
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        step="1"
+                        value={inputs.farmerLevel}
+                        onChange={(e) => updateField('farmerLevel', Number(e.target.value))}
+                        className="w-full accent-emerald-500 bg-slate-800 h-2 rounded-lg cursor-pointer"
+                      />
+
+                      <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                        <span>Lv 1 (0%)</span>
+                        <span>Lv 2-3 (0.5%)</span>
+                        <span>Lv 4-5 (1%)</span>
+                        <span>Lv 6-7 (1.5%)</span>
+                        <span>Lv 8-9 (2%)</span>
+                        <span>Lv 10 (3%)</span>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {inputs.builderRole ? (
+                    <div className="p-3.5 rounded-xl bg-slate-950 border border-cyan-500/30 space-y-2.5 transition">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-cyan-300 flex items-center gap-1.5">
+                          <IconHammer className="w-3.5 h-3.5 text-cyan-400" />
+                          Builder Level: <span className="font-mono text-white text-sm">{inputs.builderLevel}</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-[11px] font-mono font-semibold text-cyan-400">
+                          +{(GrowtopiaMath.getBuilderBonusRate(inputs.builderLevel) * 100).toFixed(1)}% Double Blocks
+                        </span>
+                      </div>
+
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        step="1"
+                        value={inputs.builderLevel}
+                        onChange={(e) => updateField('builderLevel', Number(e.target.value))}
+                        className="w-full accent-cyan-500 bg-slate-800 h-2 rounded-lg cursor-pointer"
+                      />
+
+                      <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                        <span>Lv 1 (0%)</span>
+                        <span>Lv 2-3 (0.5%)</span>
+                        <span>Lv 4-5 (1%)</span>
+                        <span>Lv 6-7 (1.5%)</span>
+                        <span>Lv 8-9 (2%)</span>
+                        <span>Lv 10 (3%)</span>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {!inputs.farmerRole && !inputs.builderRole && (
+                    <div className="col-span-full">
+                      <p className="text-[11px] text-slate-500 italic text-center py-2">
+                        Toggle Farmer or Builder role above to configure level perks.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 4TH ROW: HIDDEN RICHES & ITEMS (EXPANDED ACROSS SCREEN) */}
+              <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div>
+                    <h2 className="text-sm font-bold text-white tracking-wide uppercase">Hidden Riches & Items</h2>
+                  </div>
+                </div>
+
+                {/* Hidden Riches (Ancestor Artifacts) */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Hidden Riches</label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400">Level (1–6):</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="6"
+                        value={inputs.lvl}
+                        onChange={(e) => updateField('lvl', Math.min(6, Math.max(1, Number(e.target.value))))}
+                        className="w-14 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-center text-white font-mono focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  {inputs.jersey && (
+                    <div className="flex items-start gap-1.5 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] leading-tight">
+                      <IconAlertCircle className="w-4 h-4 flex-shrink-0 text-amber-400 mt-0.5" />
+                      <span>
+                        <strong>Red Ances locked:</strong> Does not stack with American Sports Ball Jersey (similar to Ancestral Lens Lv 6).
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 auto-rows-fr">
+                    {[
+                      { id: 'none', label: 'None' },
+                      { id: 'tesseract', label: 'Blue Ances (More Blocks)' },
+                      { id: 'seed', label: 'Green Ances (Less Growth Time)' },
+                      { id: 'lens', label: 'Red Ances (More Gems)', disabledByJersey: true },
+                      { id: 'totem', label: 'Yellow Ances (More XP)' },
+                    ].map((art) => {
+                      const isDisabled = art.disabledByJersey && inputs.jersey;
+                      const isSelected = (inputs.artifact === art.id) || (art.id === 'none' && !inputs.artifact);
+
+                      return (
+                        <button
+                          key={art.id}
+                          type="button"
+                          disabled={isDisabled}
+                          title={
+                            isDisabled
+                              ? "This item's mod is similar to that of Ancestral Lens of Riches : Level 6; however, the former's effect does not stack with the latter's."
+                              : ''
+                          }
+                          onClick={() => {
+                            if (!isDisabled) {
+                              updateField('artifact', art.id === 'none' ? null : art.id);
+                            }
+                          }}
+                          className={`h-full min-h-[48px] py-2 px-2.5 rounded-xl text-xs font-medium border text-center flex items-center justify-center transition leading-snug ${
+                            isDisabled
+                              ? 'opacity-40 cursor-not-allowed bg-slate-950 border-slate-800 text-slate-600 line-through'
+                              : isSelected
+                              ? 'bg-purple-500/20 border-purple-500 text-purple-200'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          {art.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Items & Effects Stacked */}
+                <div className="pt-2 space-y-5">
+                  
+                  {/* Items (Alphabetical Order) */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Items</label>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                      {[
+                        { 
+                          key: 'jersey', 
+                          label: 'American Sports Ball Jersey', 
+                          desc: '10% bonus gems. Higher rarity = higher gems.', 
+                          notes: [
+                            'Does not stack with Red Ances'
+                          ]
+                        },
+                        { 
+                          key: 'buddy', 
+                          label: 'Buddy Block Head', 
+                          desc: '2% bonus blocks.', 
+                        },
+                        { 
+                          key: 'cosmicCape', 
+                          label: 'Cosmic Cape', 
+                          desc: '0.001% chance of comet dust.', 
+                        },
+                        { 
+                          key: 'dcs', 
+                          label: 'Dreamcatcher Staff', 
+                          desc: '2% bonus blocks when harvesting.', 
+                          notes: [
+                            'Only works for trees that are rarity below 100'
+                          ]
+                        },
+                        { 
+                          key: 'galaxySkin', 
+                          label: 'Galaxy Skin', 
+                          desc: '10% bonus blocks.', 
+                        },
+                        { 
+                          key: 'harvester', 
+                          label: 'Harvester/Harvester of Sorrows', 
+                          desc: '10% bonus blocks when harvesting.', 
+                          notes: [
+                            'Requires Fuel Packs/Ecto Packs',
+                            'Only works for trees that are rarity below 100'
+                          ]
+                        },
+                        { 
+                          key: 'winterWishingStar', 
+                          label: 'Winter Wishing Star', 
+                          desc: '2% bonus blocks.', 
+                        },
+                      ].map((item) => {
+                        const isChecked = !!inputs[item.key];
+                        return (
+                          <button
+                            key={item.key}
+                            type="button"
+                            onClick={() => updateField(item.key, !isChecked)}
+                            className={`w-full p-3 rounded-xl border transition flex flex-col items-center justify-center text-center leading-snug select-none ${
+                              isChecked
+                                ? 'bg-rose-500/20 border-rose-500 text-rose-200 shadow-sm shadow-rose-500/20'
+                                : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                            }`}
+                          >
+                            <div className={`text-xs font-semibold ${isChecked ? 'text-rose-200' : 'text-slate-200'}`}>
+                              {item.label}
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">{item.desc}</div>
+                            {item.notes && item.notes.map((note, idx) => (
+                              <div key={idx} className="text-[9px] text-amber-400/80 mt-1 font-medium">
+                                {note}
+                              </div>
+                            ))}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Effects (Alphabetical Order) */}
+                  <div className="space-y-3 pt-3 border-t border-slate-800/80">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Effects</label>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                      {[
+                        { 
+                          key: 'elock', 
+                          label: 'Emerald Lock', 
+                          desc: '10% bonus gems.', 
+                        },
+                        { 
+                          key: 'clover', 
+                          label: 'Lucky Clover/Songpyeon', 
+                          desc: '10% chance to 5x gems and 10% bonus blocks.', 
+                        },
+                      ].map((item) => {
+                        const isChecked = !!inputs[item.key];
+                        return (
+                          <button
+                            key={item.key}
+                            type="button"
+                            onClick={() => updateField(item.key, !isChecked)}
+                            className={`w-full p-3 rounded-xl border transition flex flex-col items-center justify-center text-center leading-snug select-none ${
+                              isChecked
+                                ? 'bg-amber-500/20 border-amber-500 text-amber-200 shadow-sm shadow-amber-500/20'
+                                : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                            }`}
+                          >
+                            <div className={`text-xs font-semibold ${isChecked ? 'text-amber-200' : 'text-slate-200'}`}>
+                              {item.label}
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">{item.desc}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* 5TH ROW: KPI SUMMARY METRICS (MOVED TOWARDS THE BOTTOM) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+                
+                {/* Total Profit */}
+                <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/30 rounded-2xl p-4 relative overflow-hidden shadow-lg">
+                  <div className="flex items-center justify-between text-amber-400 mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider">Total Profit</span>
+                  </div>
+                  <div className="text-2xl font-black text-amber-300 font-mono tracking-tight">
+                    {result.totals.worldLocks.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span className="text-xs font-semibold text-amber-400 ml-1">WLs</span>
+                  </div>
+                  <p className="text-[11px] text-amber-200/60 mt-1">
+                    Seeds, Gems & Dust
+                  </p>
+                </div>
+
+                {/* Net Seed Gain */}
+                <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/30 rounded-2xl p-4 relative overflow-hidden shadow-lg">
+                  <div className="flex items-center justify-between text-emerald-400 mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider">Net Seed Gain</span>
+                  </div>
+                  <div className="text-2xl font-black text-emerald-300 font-mono tracking-tight">
+                    {result.totals.netSeedGain >= 0 ? '+' : ''}
+                    {Math.floor(result.totals.netSeedGain).toLocaleString()}
+                  </div>
+                  <p className="text-[11px] text-emerald-200/60 mt-1">
+                    Final stock: {result.totals.seeds.toLocaleString()} seeds
+                  </p>
+                </div>
+
+                {/* Gems Farmed */}
+                <div className="bg-gradient-to-br from-cyan-500/10 to-blue-600/5 border border-cyan-500/30 rounded-2xl p-4 relative overflow-hidden shadow-lg">
+                  <div className="flex items-center justify-between text-cyan-400 mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider">Gems Farmed</span>
+                  </div>
+                  <div className="text-2xl font-black text-cyan-300 font-mono tracking-tight">
+                    {result.totals.gems.toLocaleString()}
+                  </div>
+                  <p className="text-[11px] text-cyan-200/60 mt-1">
+                    {(inputs.gemwl > 0 ? (result.totals.gems / inputs.gemwl).toFixed(1) : 0)} WLs gem value
+                  </p>
+                </div>
+
+                {/* Comet Dust */}
+                <div className="bg-gradient-to-br from-pink-500/10 to-purple-600/5 border border-pink-500/30 rounded-2xl p-4 relative overflow-hidden shadow-lg">
+                  <div className="flex items-center justify-between text-pink-400 mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider">Comet Dust</span>
+                  </div>
+                  <div className="text-2xl font-black text-pink-300 font-mono tracking-tight">
+                    {result.totals.dust.toFixed(3)}
+                  </div>
+                  <p className="text-[11px] text-pink-200/60 mt-1">
+                    {inputs.dustwl > 0 ? `${(result.totals.dust / inputs.dustwl).toFixed(2)} WLs value` : 'Cosmic Cape drop'}
+                  </p>
+                </div>
+
+                {/* Total XP */}
+                <div className="bg-gradient-to-br from-purple-500/10 to-indigo-600/5 border border-purple-500/30 rounded-2xl p-4 relative overflow-hidden shadow-lg">
+                  <div className="flex items-center justify-between text-purple-400 mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider">Total XP</span>
+                  </div>
+                  <div className="text-2xl font-black text-purple-300 font-mono tracking-tight">
+                    {result.totals.xp.toLocaleString()}
+                  </div>
+                  <p className="text-[11px] text-purple-200/60 mt-1">
+                    {result.ctx.xpPerAction} XP / action base
+                  </p>
+                </div>
+
+                {/* Total Duration */}
+                <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/80 rounded-2xl p-4 relative overflow-hidden shadow-lg">
+                  <div className="flex items-center justify-between text-slate-300 mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider">Total Duration</span>
+                  </div>
+                  <div className="text-xl font-bold text-slate-100 font-mono tracking-tight">
+                    {result.totals.formattedTime}
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    {GrowtopiaMath.formatDuration(result.ctx.growthSeconds)} / cycle
+                  </p>
+                </div>
+
+              </div>
+
+              {/* 6TH ROW: BOTTOMMOST DETAILED SECTION (HARVEST MULTIPLIERS, BREAKDOWN, CYCLE TABLE & GRAPH) */}
+              <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
+                
+                {/* Tab Navigation Header */}
+                <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setActiveTab('summary')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                        activeTab === 'summary'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <IconLayers className="w-3.5 h-3.5" />
+                      <span>Calculations & Mechanics</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('cycles')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                        activeTab === 'cycles'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <IconTable className="w-3.5 h-3.5" />
+                      <span>Cycle Table ({result.cycles.length})</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('graph')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                        activeTab === 'graph'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <IconTrendingUp className="w-3.5 h-3.5" />
+                      <span>Visual Growth</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* TAB 1: SUMMARY & FORMULA METRICS (HARVEST MULTIPLIERS & PROFIT BREAKDOWN) */}
+                {activeTab === 'summary' && (
+                  <div className="p-5 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      {/* Harvest Multipliers */}
+                      <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-2.5">
+                        <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <span>Harvest Multipliers</span>
+                        </h4>
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between py-1 border-b border-slate-850">
+                            <span className="text-slate-400">Tree to Seed Drop Rate:</span>
+                            <span className="text-white font-mono">{(result.ctx.seedHarvestRate * 100).toFixed(2)}%</span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-850">
+                            <span className="text-slate-400">Harvest Block Yield:</span>
+                            <span className="text-white font-mono">{result.ctx.blockYieldRate.toFixed(2)} blocks/tree</span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-850">
+                            <span className="text-slate-400">Compound Smash Multiplier:</span>
+                            <span className="text-emerald-400 font-mono font-semibold">{result.ctx.compoundSmashMultiplier.toFixed(3)}x</span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-850">
+                            <span className="text-slate-400">Harvester Active:</span>
+                            <span className={`font-mono ${result.ctx.isHarvesterActive ? 'text-emerald-400' : 'text-slate-500'}`}>
+                              {result.ctx.isHarvesterActive ? '+10% Yield' : 'Inactive (Rarity ≥ 100 or Off)'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-slate-400">Dreamcatcher Staff Active:</span>
+                            <span className={`font-mono ${result.ctx.isDcsActive ? 'text-emerald-400' : 'text-slate-500'}`}>
+                              {result.ctx.isDcsActive ? '+2% Yield' : 'Inactive (Rarity ≥ 100 or Off)'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Profit Breakdown */}
+                      <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-2.5">
+                        <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <span>Profit Breakdown</span>
+                        </h4>
+                        <div className="space-y-2 text-xs">
+                          <div className="flex justify-between py-1 border-b border-slate-850">
+                            <span className="text-slate-400">Seed Profit Value:</span>
+                            <span className="text-amber-300 font-mono">
+                              {inputs.seedswl > 0 
+                                ? `${(Math.max(0, result.totals.netSeedGain) / inputs.seedswl).toFixed(2)} WLs`
+                                : '0.00 WLs (0/WL)'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-850">
+                            <span className="text-slate-400">Gem Profit Value:</span>
+                            <span className="text-amber-300 font-mono">
+                              {inputs.gemwl > 0 
+                                ? `${(result.totals.gems / inputs.gemwl).toFixed(2)} WLs`
+                                : '0.00 WLs (0/WL)'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-850">
+                            <span className="text-slate-400">Dust Profit Value:</span>
+                            <span className="text-pink-300 font-mono">
+                              {inputs.dustwl > 0 
+                                ? `${(result.totals.dust / inputs.dustwl).toFixed(2)} WLs`
+                                : '0.00 WLs (0/WL)'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-slate-400">Average Profit / Cycle:</span>
+                            <span className="text-emerald-400 font-mono font-semibold">
+                              {(result.totals.worldLocks / Math.max(1, inputs.times)).toFixed(2)} WLs / cycle
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: DETAILED CYCLE-BY-CYCLE TABLE */}
+                {activeTab === 'cycles' && (
+                  <div className="overflow-x-auto max-h-[380px] overflow-y-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider sticky top-0 border-b border-slate-800">
+                        <tr>
+                          <th className="py-2.5 px-3">#</th>
+                          <th className="py-2.5 px-3">Start Seeds</th>
+                          <th className="py-2.5 px-3">End Seeds</th>
+                          <th className="py-2.5 px-3">Net Gain</th>
+                          <th className="py-2.5 px-3">Blocks</th>
+                          <th className="py-2.5 px-3">Gems</th>
+                          <th className="py-2.5 px-3">Dust</th>
+                          <th className="py-2.5 px-3">XP</th>
+                          <th className="py-2.5 px-3">WLs</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 font-mono">
+                        {result.cycles.map((c) => (
+                          <tr key={c.cycle} className="hover:bg-slate-850/60 transition">
+                            <td className="py-2.5 px-3 font-bold text-slate-400">{c.cycle}</td>
+                            <td className="py-2.5 px-3 text-slate-300">{c.startSeeds.toLocaleString()}</td>
+                            <td className="py-2.5 px-3 text-emerald-300 font-semibold">{c.endSeeds.toLocaleString()}</td>
+                            <td className="py-2.5 px-3 text-emerald-400">+{c.seedProfit.toLocaleString()}</td>
+                            <td className="py-2.5 px-3 text-slate-300">{c.blocksSmashed.toLocaleString()}</td>
+                            <td className="py-2.5 px-3 text-cyan-300">{c.gems.toLocaleString()}</td>
+                            <td className="py-2.5 px-3 text-pink-300">{c.cometDust.toFixed(4)}</td>
+                            <td className="py-2.5 px-3 text-purple-300">{c.xp.toLocaleString()}</td>
+                            <td className="py-2.5 px-3 text-amber-300 font-semibold">{c.worldLocks.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* TAB 3: VISUAL CYCLE PROGRESSION GRAPH */}
+                {activeTab === 'graph' && (
+                  <div className="p-5 space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span>Cycle Seeds & Profit Progression</span>
+                        <span className="text-emerald-400 font-mono">Max Capacity: {inputs.maximum.toLocaleString()}</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {result.cycles.slice(0, 10).map((c) => {
+                          const seedRatio = Math.min(100, (c.endSeeds / (inputs.maximum || 2500)) * 100);
+                          return (
+                            <div key={c.cycle} className="space-y-1">
+                              <div className="flex justify-between text-[11px] font-mono">
+                                <span className="text-slate-300 font-bold">Cycle {c.cycle}</span>
+                                <span className="text-emerald-300">{c.endSeeds.toLocaleString()} seeds (+{c.seedProfit}) • {c.worldLocks.toFixed(2)} WLs</span>
+                              </div>
+                              <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+                                <div
+                                  className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-300"
+                                  style={{ width: `${seedRatio}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {result.cycles.length > 10 && (
+                        <p className="text-[11px] text-slate-500 text-center pt-2">
+                          Showing first 10 of {result.cycles.length} cycles. Check Cycle Table for full history.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+
+            </div>
+
+            {/* FOOTNOTE */}
+            <footer className="pt-6 pb-4 border-t border-slate-850 text-center space-y-1.5">
+              <p className="text-xs text-slate-500 leading-relaxed">
+                This website is for reference only. Your individual results may vary significantly.
+              </p>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                All of the information and calculations used in this website are from the Growtopia Wiki website.
+              </p>
+            </footer>
+
+            {/* POPUP MODAL: COMMON FARMABLES SELECTION */}
+            {showPresetModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+                <div 
+                  className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+                    <div>
+                      <h3 className="text-base font-bold text-white">Select Common Farmable Preset</h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPresetModal(false)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                    >
+                      <IconX className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="p-4 border-b border-slate-800 bg-slate-950/50">
+                    <div className="relative">
+                      <IconSearch className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search farmable or rarity (e.g., Laser Grid, 68)..."
+                        value={presetSearch}
+                        onChange={(e) => setPresetSearch(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preset List */}
+                  <div className="overflow-y-auto p-4 space-y-2 max-h-[55vh]">
+                    {filteredPresets.length === 0 ? (
+                      <p className="text-xs text-slate-500 text-center py-8">No farmables found matching "{presetSearch}".</p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {filteredPresets.map((farmable) => {
+                          const isSelected = selectedPreset?.name === farmable.name;
+                          return (
+                            <div
+                              key={farmable.name}
+                              onClick={() => handleSelectPreset(farmable)}
+                              className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between group ${
+                                isSelected
+                                  ? 'bg-emerald-950/40 border-emerald-500 text-emerald-200'
+                                  : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-850/60'
+                              }`}
+                            >
+                              <div className="space-y-1">
+                                <div className="text-xs font-bold text-slate-200 group-hover:text-emerald-300 transition">
+                                  {farmable.name}
+                                </div>
+                                <div className="text-[10px] text-slate-400 flex items-center gap-2">
+                                  <span>Max Fruit: <strong className="text-slate-300">{farmable.maxFruit}</strong></span>
+                                  <span>•</span>
+                                  <span>Seed Gain: <strong className="text-emerald-400">+{farmable.avgSeedGain}</strong></span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <span className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono font-bold text-emerald-400 group-hover:border-emerald-500/40 transition">
+                                  Rarity {farmable.rarity}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="p-3 border-t border-slate-800 bg-slate-950 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowPresetModal(false)}
+                      className="px-4 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      );
+    }
+
+    // Mount the Application to DOM
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
