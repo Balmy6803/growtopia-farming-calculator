@@ -112,15 +112,3 @@ $$S_{\text{smash}} = B_{\text{effective}} \times 0.25$$
 * **Rendering & Compilation:** Babel Standalone for in-browser JSX parsing
 * **Styling Framework:** Tailwind CSS (CDN distribution)
 * **Icons:** Inline SVGs (zero external icon library dependencies)
-
----
-
-## Deployment
-
-Because the application contains zero build dependencies or external assets, it can be deployed directly to any static web hosting provider.
-
-### GitHub Pages Setup
-
-1. Clone or initialize the repository:
-   ```bash
-   git clone [https://github.com/your-username/growtopia-farm-calculator.git](https://github.com/your-username/growtopia-farm-calculator.git)
