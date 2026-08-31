@@ -35,10 +35,10 @@ The project is distributed as a self-contained, single-file web application requ
 
 ### 4. Hidden Riches (Ancestral Item Effects)
 Supports level 1 through 6 progression with mutual exclusion logic:
-* **Blue Ancestor (Ancestral Tesseract of Riches):** +5% to +10% block drop chance when smashing.
-* **Green Ancestor (Ancestral Seed of Life):** -2% to -12% seed growth duration reduction.
-* **Red Ancestor (Ancestral Lens of Riches):** +5% to +10% bonus gem drop rate when smashing (mutually exclusive with American Sports Ball Jersey).
-* **Yellow Ancestor (Ancestral Totem of Wisdom):** +5% to +10% chance of receiving double XP per farming action.
+* **Blue Ances (Ancestral Tesseract of Riches):** +5% to +10% block drop chance when smashing.
+* **Green Ances (Ancestral Seed of Life):** -2% to -12% seed growth duration reduction.
+* **Red Ances (Ancestral Lens of Riches):** +5% to +10% bonus gem drop rate when smashing (mutually exclusive with American Sports Ball Jersey).
+* **Yellow Ances (Ancestral Totem of Wisdom):** +5% to +10% chance of receiving double XP per farming action.
 
 ### 5. Equipment Modifiers and Active Effects
 * **American Sports Ball Jersey:** 10% bonus gems on smashing (cannot be used with Red Ances).
