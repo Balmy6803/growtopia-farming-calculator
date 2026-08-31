@@ -1,12 +1,12 @@
 # Growtopia Farming Calculator
 
-An open-source, client-side simulation engine and yield calculator designed for Growtopia players. This application computes multi-cycle agricultural trajectories, estimating seed expansion, block smashing yields, gem production, experience gain (XP), Comet Dust rates, and overall economy profitability (World Locks).
+An open-source, client-side simulation engine and yield calculator designed for Growtopia players. This application computes multi-cycle agricultural trajectories, estimating seed gain, block-break yields, gem gain, experience gain (XP), Comet Dust chances, and World lock calculations.
 
 ---
 
 ## Overview
 
-The Growtopia Farming Calculator models the complete lifecycle of farming operations in Growtopia. By incorporating base drop mechanics, recursive block-smashing loops, equipment modifiers, role masteries, and Ancestral artifacts, the calculator provides deterministic projections over 1 to 100 farming cycles.
+The Growtopia Farming Calculator models the complete lifecycle of farming operations in Growtopia. By incorporating base drop mechanics, recursive block-smashing loops, item effects, role bonuses, and Ances, the calculator provides deterministic projections over 1 to 100 farming cycles.
 
 The project is distributed as a self-contained, single-file web application requiring no backend infrastructure or external build toolchains.
 
