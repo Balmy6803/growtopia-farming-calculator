@@ -43,13 +43,13 @@ Supports level 1 through 6 progression with mutual exclusion logic:
 ### 5. Equipment Modifiers and Active Effects
 * **American Sports Ball Jersey:** 10% bonus gems on smashing (cannot be used with Red Ances).
 * **Buddy Block Head:** 2% bonus block drop chance.
-* **Cosmic Cape:** 0.001% (1 in 100,000) Comet Dust drop rate per smashed block.
+* **Cosmic Cape:** 0.001% (1 in 100,000) Comet Dust drop rate per block destroyed.
 * **Dreamcatcher Staff:** 2% bonus harvest blocks for items with Rarity < 100.
 * **Galaxy Skin:** 10% bonus block drop chance.
 * **Harvester / Harvester of Sorrows:** 10% bonus harvest blocks for items with Rarity < 100.
 * **Winter Wishing Star:** 2% bonus block drop chance.
-* **Emerald Lock:** 10% chance of adding an additional gem drop upon breaking blocks (+0.10 gems/block).
-* **Lucky Clover / Songpyeon:** 10% bonus block chance and 10% chance to multiply gem drops by up to 5x (average +200% bonus on trigger).
+* **Emerald Lock:** 10% chance of adding an additional gem drop upon breaking blocks.
+* **Lucky Clover / Songpyeon:** 10% bonus block chance and 10% chance to multiply gem drops by up to 5x.
 
 ### 6. Analytics and Data Export
 * **Key Performance Indicators:** Real-time result for World locks, Net Seed Gain, Total Gems, Comet Dust, XP, and Total Growth Time.
