@@ -295,31 +295,40 @@
       const farmerBonusRate = inputs.farmerRole ? GrowtopiaMath.getFarmerBonusRate(inputs.farmerLevel) : 0;
       const builderBonusRate = inputs.builderRole ? GrowtopiaMath.getBuilderBonusRate(inputs.builderLevel) : 0;
 
-      let smashDenominator = 1 - BASE_RATES.blockBlocks;
+      // ==========================================
+      // BONUS BLOCKS: INDEPENDENT ROLLS & 30% CAP
+      // ==========================================
+      let rawBonusBlockChance = 0;
 
       // Blue Ances: Lv 1 (5%), Lv 2 (6%), Lv 3 (7%), Lv 4 (8%), Lv 5 (9%), Lv 6 (10%)
       if (artifact === 'tesseract') {
-        const tesseractBonus = (4 + lvl) / 100;
-        smashDenominator *= (1 - tesseractBonus);
+        rawBonusBlockChance += (4 + lvl) / 100;
       }
       if (inputs.buddy) {
-        smashDenominator *= (1 - BASE_RATES.buddy);
+        rawBonusBlockChance += BASE_RATES.buddy; // 2%
       }
       if (inputs.winterWishingStar) {
-        smashDenominator *= (1 - BASE_RATES.winterWishingStar);
+        rawBonusBlockChance += BASE_RATES.winterWishingStar; // 2%
       }
       if (inputs.galaxySkin) {
-        smashDenominator *= (1 - BASE_RATES.galaxySkin);
+        rawBonusBlockChance += BASE_RATES.galaxySkin; // 10%
       }
-      // Lucky Clover / Songpyeon: 10% chance for an extra block to be dropped
+      // Lucky Clover / Songpyeon: 10% extra block roll
       if (inputs.clover) {
-        smashDenominator *= (1 - BASE_RATES.clover.blockChance);
+        rawBonusBlockChance += BASE_RATES.clover.blockChance; // 10%
       }
-      // Builder Role double block drop factor
+      // Builder Role double block drop factor (0.5% - 3%)
       if (builderBonusRate > 0) {
-        smashDenominator *= (1 - builderBonusRate);
+        rawBonusBlockChance += builderBonusRate;
       }
 
+      // Enforce the ~30% hard cap on cumulative bonus block drop chances
+      const cappedBonusBlockChance = Math.min(0.30, rawBonusBlockChance);
+      const isBlockCapped = rawBonusBlockChance > 0.30;
+
+      // Total block return per smash: Base (8.33%) + Capped Bonus Blocks
+      const totalSmashBlockReturn = BASE_RATES.blockBlocks + cappedBonusBlockChance;
+      const smashDenominator = 1 - totalSmashBlockReturn;
       const compoundSmashMultiplier = smashDenominator > 0 ? (1 / smashDenominator) : 1;
 
       // Harvester only activates if equipped AND the item rarity is strictly below 100
@@ -334,23 +343,35 @@
       const elockRate = inputs.elock ? BASE_RATES.elock : 0;
       const cosmicCapeRate = inputs.cosmicCape ? BASE_RATES.cosmicCape : 0;
 
-      // Lucky Clover / Songpyeon gem bonus
+      // Lucky Clover / Songpyeon gem bonus (10% chance for up to 5x gems)
       const cloverGemBonus = inputs.clover 
         ? (gemBaseYield * BASE_RATES.blockGems * BASE_RATES.clover.gemChance * BASE_RATES.clover.gemAvgBonusMultiplier) 
         : 0;
 
+      // ==========================================
+      // BONUS GEMS: LENS & JERSEY NON-STACKING
+      // (Emerald Lock & Clover remain fully additive)
+      // ==========================================
+      let extraGemChance = 0;
+      let isJerseyOverridingLens = false;
+
       // Red Ances: Lv 1 (5%), Lv 2 (6%), Lv 3 (7%), Lv 4 (8%), Lv 5 (9%), Lv 6 (10%)
-      let lensGemRate = 0;
-      if (artifact === 'lens' && !inputs.jersey) {
-        const lensBonus = (4 + lvl) / 100;
-        lensGemRate = gemBaseYield * BASE_RATES.blockGems * lensBonus;
+      const lensBonus = (artifact === 'lens') ? ((4 + lvl) / 100) : 0;
+      // American Sports Ball Jersey: 10% bonus chance
+      const jerseyBonus = inputs.jersey ? BASE_RATES.jersey : 0;
+
+      // Non-stacking rule: Jersey and Red Ances do not stack
+      if (inputs.jersey) {
+        extraGemChance = jerseyBonus;
+        if (artifact === 'lens') {
+          isJerseyOverridingLens = true;
+        }
+      } else if (artifact === 'lens') {
+        extraGemChance = lensBonus;
       }
 
-      // American Sports Ball Jersey: 10% chance to receive extra gems scaled with rarity
-      let jerseyGemRate = 0;
-      if (inputs.jersey && artifact !== 'lens') {
-        jerseyGemRate = gemBaseYield * BASE_RATES.blockGems * BASE_RATES.jersey;
-      }
+      const combinedExtraGemChance = extraGemChance;
+      const extraGemRate = gemBaseYield * BASE_RATES.blockGems * combinedExtraGemChance;
 
       // Yellow Ances: Lv 1 (5%), Lv 2 (6%), Lv 3 (7%), Lv 4 (8%), Lv 5 (9%), Lv 6 (10%) double XP chance
       let totemXpMultiplier = 0;
@@ -366,6 +387,9 @@
         gemBaseYield,
         xpPerAction,
         growthSeconds,
+        rawBonusBlockChance,
+        cappedBonusBlockChance,
+        isBlockCapped,
         compoundSmashMultiplier,
         harvesterRate,
         isHarvesterActive,
@@ -375,9 +399,10 @@
         builderBonusRate,
         elockRate,
         cosmicCapeRate,
-        jerseyGemRate,
         cloverGemBonus,
-        lensGemRate,
+        combinedExtraGemChance,
+        extraGemRate,
+        isJerseyOverridingLens,
         totemXpMultiplier,
       };
     }
@@ -431,11 +456,11 @@
         const farmerHarvestBonusGems = baseHarvestGems * ctx.farmerBonusRate;
         const baseSmashGems = ctx.gemBaseYield * BASE_RATES.blockGems * effectiveBlocks;
 
+        // Additive stacking of gem bonuses (Emerald lock + Clover + Lens/Jersey)
         const bonusGems = farmerHarvestBonusGems +
                           (effectiveBlocks * ctx.elockRate) +
                           (effectiveBlocks * ctx.cloverGemBonus) +
-                          (effectiveBlocks * ctx.lensGemRate) +
-                          (effectiveBlocks * ctx.jerseyGemRate);
+                          (effectiveBlocks * ctx.extraGemRate);
         const cycleGems = baseHarvestGems + baseSmashGems + bonusGems;
 
         // Comet Dust Drops (from Cosmic Cape)
@@ -542,13 +567,7 @@
       const result = useMemo(() => calculateFarming(inputs), [inputs]);
 
       const updateField = (key, value) => {
-        setInputs(prev => {
-          const next = { ...prev, [key]: value };
-          if (key === 'jersey' && value === true && next.artifact === 'lens') {
-            next.artifact = 'none';
-          }
-          return next;
-        });
+        setInputs(prev => ({ ...prev, [key]: value }));
       };
 
       const handleSelectPreset = (preset) => {
@@ -1087,46 +1106,29 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                     </div>
                   </div>
 
-                  {inputs.jersey && (
-                    <div className="flex items-start gap-1.5 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] leading-tight">
-                      <IconAlertCircle className="w-4 h-4 flex-shrink-0 text-amber-400 mt-0.5" />
-                      <span>
-                        <strong>Red Ances locked:</strong> Does not stack with American Sports Ball Jersey (similar to Ancestral Lens Lv 6).
-                      </span>
-                    </div>
-                  )}
-
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 auto-rows-fr">
                     {[
                       { id: 'none', label: 'None' },
                       { id: 'tesseract', label: 'Blue Ances (More Blocks)' },
                       { id: 'seed', label: 'Green Ances (Less Growth Time)' },
-                      { id: 'lens', label: 'Red Ances (More Gems)', disabledByJersey: true },
+                      { id: 'lens', label: 'Red Ances (More Gems)' },
                       { id: 'totem', label: 'Yellow Ances (More XP)' },
                     ].map((art) => {
-                      const isDisabled = art.disabledByJersey && inputs.jersey;
                       const isSelected = (inputs.artifact === art.id) || (art.id === 'none' && !inputs.artifact);
+                      const isLensDisabled = art.id === 'lens' && inputs.jersey;
 
                       return (
                         <button
                           key={art.id}
                           type="button"
-                          disabled={isDisabled}
-                          title={
-                            isDisabled
-                              ? "This item's mod is similar to that of Ancestral Lens of Riches : Level 6; however, the former's effect does not stack with the latter's."
-                              : ''
-                          }
-                          onClick={() => {
-                            if (!isDisabled) {
-                              updateField('artifact', art.id === 'none' ? null : art.id);
-                            }
-                          }}
+                          disabled={isLensDisabled}
+                          onClick={() => !isLensDisabled && updateField('artifact', art.id === 'none' ? null : art.id)}
+                          title={isLensDisabled ? 'Disabled: Incompatible with American Sports Ball Jersey' : ''}
                           className={`h-full min-h-[48px] py-2 px-2.5 rounded-xl text-xs font-medium border text-center flex items-center justify-center transition leading-snug ${
-                            isDisabled
-                              ? 'opacity-40 cursor-not-allowed bg-slate-950 border-slate-800 text-slate-600 line-through'
+                            isLensDisabled
+                              ? 'opacity-40 cursor-not-allowed bg-slate-950 border-slate-900 text-slate-600'
                               : isSelected
-                              ? 'bg-purple-500/20 border-purple-500 text-purple-200'
+                              ? 'bg-purple-500/20 border-purple-500 text-purple-200 shadow-sm shadow-purple-500/20'
                               : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                           }`}
                         >
@@ -1152,7 +1154,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                           label: 'American Sports Ball Jersey', 
                           desc: '10% bonus gems. Higher rarity = higher gems.', 
                           notes: [
-                            'Does not stack with Red Ances'
+                            'Does not stack with Ancestral Lens of Riches'
                           ]
                         },
                         { 
@@ -1194,23 +1196,29 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                         },
                       ].map((item) => {
                         const isChecked = !!inputs[item.key];
+                        const isJerseyDisabled = item.key === 'jersey' && inputs.artifact === 'lens';
+
                         return (
                           <button
                             key={item.key}
                             type="button"
-                            onClick={() => updateField(item.key, !isChecked)}
+                            disabled={isJerseyDisabled}
+                            onClick={() => !isJerseyDisabled && updateField(item.key, !isChecked)}
+                            title={isJerseyDisabled ? 'Disabled: Incompatible with Red Ances (Ancestral Lens of Riches)' : ''}
                             className={`w-full p-3 rounded-xl border transition flex flex-col items-center justify-center text-center leading-snug select-none ${
-                              isChecked
+                              isJerseyDisabled
+                                ? 'opacity-40 cursor-not-allowed bg-slate-950 border-slate-900 text-slate-600'
+                                : isChecked
                                 ? 'bg-rose-500/20 border-rose-500 text-rose-200 shadow-sm shadow-rose-500/20'
                                 : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                             }`}
                           >
-                            <div className={`text-xs font-semibold ${isChecked ? 'text-rose-200' : 'text-slate-200'}`}>
+                            <div className={`text-xs font-semibold ${isJerseyDisabled ? 'text-slate-600' : isChecked ? 'text-rose-200' : 'text-slate-200'}`}>
                               {item.label}
                             </div>
-                            <div className="text-[10px] text-slate-400 mt-0.5">{item.desc}</div>
+                            <div className={`text-[10px] mt-0.5 ${isJerseyDisabled ? 'text-slate-600' : 'text-slate-400'}`}>{item.desc}</div>
                             {item.notes && item.notes.map((note, idx) => (
-                              <div key={idx} className="text-[9px] text-amber-400/80 mt-1 font-medium">
+                              <div key={idx} className={`text-[9px] mt-1 font-medium ${isJerseyDisabled ? 'text-slate-600' : 'text-amber-400/80'}`}>
                                 {note}
                               </div>
                             ))}
@@ -1398,7 +1406,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                       {/* Harvest Multipliers */}
                       <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-2.5">
                         <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                          <span>Harvest Multipliers</span>
+                          <span>Harvest & Smashing Multipliers</span>
                         </h4>
                         <div className="space-y-2 text-xs">
                           <div className="flex justify-between py-1 border-b border-slate-850">
@@ -1409,9 +1417,53 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                             <span className="text-slate-400">Harvest Block Yield:</span>
                             <span className="text-white font-mono">{result.ctx.blockYieldRate.toFixed(2)} blocks/tree</span>
                           </div>
+                          <div className="flex justify-between py-1 border-b border-slate-850 items-center">
+                            <span className="text-slate-400">Bonus Block Drop Chance:</span>
+                            <span className="flex items-center gap-1 font-mono">
+                              <span className={result.ctx.isBlockCapped ? 'text-amber-400 font-semibold' : 'text-cyan-400'}>
+                                +{(result.ctx.cappedBonusBlockChance * 100).toFixed(1)}%
+                              </span>
+                              {result.ctx.isBlockCapped && (
+                                <span className="text-[10px] text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                                  Capped at 30%
+                                </span>
+                              )}
+                            </span>
+                          </div>
                           <div className="flex justify-between py-1 border-b border-slate-850">
                             <span className="text-slate-400">Compound Smash Multiplier:</span>
                             <span className="text-emerald-400 font-mono font-semibold">{result.ctx.compoundSmashMultiplier.toFixed(3)}x</span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-850 items-center">
+                            <span className="text-slate-400">Rarity Bonus Gem Chance:</span>
+                            <span className="flex items-center gap-1 font-mono">
+                              <span className={result.ctx.combinedExtraGemChance > 0 ? 'text-cyan-400 font-semibold' : 'text-slate-500'}>
+                                {result.ctx.combinedExtraGemChance > 0 ? `+${(result.ctx.combinedExtraGemChance * 100).toFixed(1)}%` : 'Inactive'}
+                              </span>
+                              {result.ctx.isJerseyOverridingLens && (
+                                <span className="text-[10px] text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                                  Jersey overrides Lens
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-850 items-center">
+                            <span className="text-slate-400">Emerald Lock (+1 Flat Gem):</span>
+                            <span className={`font-mono ${inputs.elock ? 'text-emerald-400 font-semibold' : 'text-slate-500'}`}>
+                              {inputs.elock ? '+0.10 gems / block' : 'Inactive'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-850 items-center">
+                            <span className="text-slate-400">Lucky Clover (5x Multiplier):</span>
+                            <span className={`font-mono ${inputs.clover ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
+                              {inputs.clover ? '10% chance for up to 5x' : 'Inactive'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-850 items-center">
+                            <span className="text-slate-400">Farmer Role Gem Boost:</span>
+                            <span className={`font-mono ${inputs.farmerRole && result.ctx.farmerBonusRate > 0 ? 'text-emerald-400 font-semibold' : 'text-slate-500'}`}>
+                              {inputs.farmerRole && result.ctx.farmerBonusRate > 0 ? `+${(result.ctx.farmerBonusRate * 100).toFixed(1)}% harvest gems` : 'Inactive'}
+                            </span>
                           </div>
                           <div className="flex justify-between py-1 border-b border-slate-850">
                             <span className="text-slate-400">Harvester Active:</span>
