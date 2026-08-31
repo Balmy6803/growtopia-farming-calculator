@@ -15,7 +15,7 @@ The project is distributed as a self-contained, single-file web application requ
 ## Features
 
 ### 1. Common Farmables Presets
-* Integrated database containing 26 standard farmable items (e.g., Laser Grid, Chandelier, Pepper Tree, Steel Block, Clouds Background).
+* Integrated database containing 26 standard farmable items (e.g., Laser Grid, Chandelier, Pepper Tree, Fish Tank, Clouds Background).
 * Automatic population of item rarity and baseline statistics upon selection.
 * Dedicated modal interface with search and reset capabilities.
 
@@ -29,11 +29,11 @@ The project is distributed as a self-contained, single-file web application requ
   * Very Farmable (2.0x / 5.00 blocks per tree)
   * Super Farmable (2.5x / 6.25 blocks per tree)
 
-### 3. Role Up! Progression Perks
+### 3. Role Up! Bonus Calculation
 * **Farmer Role (Levels 1–10):** Adds scaling bonus gem multipliers to harvested trees (+0.5% at Lv 2 up to +3.0% at Lv 10).
 * **Builder Role (Levels 1–10):** Adds double-block drop probabilities when breaking blocks (+0.5% at Lv 2 up to +3.0% at Lv 10).
 
-### 4. Hidden Riches (Ancestor Artifacts)
+### 4. Hidden Riches (Ancestral Item Effects)
 Supports level 1 through 6 progression with mutual exclusion logic:
 * **Blue Ancestor (Ancestral Tesseract of Riches):** +5% to +10% block drop chance when smashing.
 * **Green Ancestor (Ancestral Seed of Life):** -2% to -12% seed growth duration reduction.
@@ -52,7 +52,7 @@ Supports level 1 through 6 progression with mutual exclusion logic:
 * **Lucky Clover / Songpyeon:** 10% bonus block chance and 10% chance to multiply gem drops by up to 5x (average +200% bonus on trigger).
 
 ### 6. Analytics and Data Export
-* **Key Performance Indicators:** Instant readouts for Total Profit (WLs), Net Seed Gain, Total Gems, Comet Dust, XP, and Total Growth Time.
+* **Key Performance Indicators:** Real-time result for World locks, Net Seed Gain, Total Gems, Comet Dust, XP, and Total Growth Time.
 * **Interactive Views:** Tabbed navigation between Calculation Mechanics, Cycle-by-Cycle Data Tables, and Visual Growth Progress Bars.
 * **Export Utilities:** Direct CSV export functionality and formatted clipboard summary copying.
 
