@@ -30,8 +30,8 @@ The project is distributed as a self-contained, single-file web application requ
   * Super Farmable (2.5x / 6.25 blocks per tree)
 
 ### 3. Role Up! Bonus Calculation
-* **Farmer Role (Levels 1–10):** Adds scaling bonus gem multipliers to harvested trees (+0.5% at Lv 2 up to +3.0% at Lv 10).
-* **Builder Role (Levels 1–10):** Adds double-block drop probabilities when breaking blocks (+0.5% at Lv 2 up to +3.0% at Lv 10).
+* **Farmer Role (Levels 1–10):** Adds scaling bonus gem probabilities from harvested trees (+0.5% at Lv 2 up to +3.0% at Lv 10).
+* **Builder Role (Levels 1–10):** Adds double-block drop probabilities from breaking blocks (+0.5% at Lv 2 up to +3.0% at Lv 10).
 
 ### 4. Hidden Riches (Ancestral Item Effects)
 Supports level 1 through 6 progression with mutual exclusion logic:
