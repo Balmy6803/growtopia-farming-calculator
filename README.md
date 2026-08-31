@@ -95,11 +95,11 @@ Where:
 * $B_{\text{base}} = \frac{1}{12}$ (Standard block return rate)
 * $M_i$ represents all active additive drop chances (Blue Ancestor, Builder Role, Buddy Block Head, Galaxy Skin, Winter Wishing Star, Lucky Clover).
 
-The compound smash multiplier is:
+The compound block break multiplier is:
 
 $$M_{\text{compound}} = \frac{1}{D_{\text{smash}}}$$
 
-Total seeds retrieved from smashing:
+Total seeds from breaking blocks:
 
 $$S_{\text{smash}} = B_{\text{effective}} \times 0.25$$
 
