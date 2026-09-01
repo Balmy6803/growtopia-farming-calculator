@@ -40,7 +40,7 @@ Supports level 1 through 6 for ancestral items and their corresponding effects:
 * **Red Ances (Ancestral Lens of Riches):** +5% to +10% bonus gem drop rate when smashing (mutually exclusive with American Sports Ball Jersey).
 * **Yellow Ances (Ancestral Totem of Wisdom):** +5% to +10% chance of receiving double XP per farming action.
 
-### 5. Equipment Modifiers and Active Effects
+### 5. Item Effects and Consumables
 * **American Sports Ball Jersey:** 10% bonus gems on smashing (cannot be used with Red Ances).
 * **Buddy Block Head:** 2% bonus block drop chance.
 * **Cosmic Cape:** 0.001% (1 in 100,000) Comet Dust drop rate per block destroyed.
