@@ -1,6 +1,6 @@
 # Growtopia Farming Calculator
 
-An open-source, client-side simulation engine and yield calculator designed for Growtopia players. This application computes multi-cycle agricultural trajectories, estimating seed gain, block-break yields, gem gain, experience gain (XP), Comet Dust chances, and World lock calculations.
+An open-source, client-side simulation engine and yield calculator designed for Growtopia players. This application computes multi-cycle agricultural trajectories, estimating seed gain, block-break yields, gem gain, experience gain (XP), Comet Dust chances, and World Lock calculations.
 
 ---
 
@@ -34,25 +34,28 @@ The project is distributed as a self-contained, single-file web application requ
 * **Builder Role (Levels 1–10):** Adds double-block drop probabilities from breaking blocks (+0.5% at Level 2 up to +3.0% at Level 10).
 
 ### 4. Hidden Riches (Ancestral Item Effects)
-Supports level 1 through 6 for ancestral items and their corresponding effects:
+Supports level 1 through 6 for ancestral items with dynamic UI mutual exclusion:
 * **Blue Ances (Ancestral Tesseract of Riches):** +5% to +10% block drop chance when smashing.
 * **Green Ances (Ancestral Seed of Life):** -2% to -12% seed growth duration reduction.
-* **Red Ances (Ancestral Lens of Riches):** +5% to +10% bonus gem drop rate when smashing (mutually exclusive with American Sports Ball Jersey).
+* **Red Ances (Ancestral Lens of Riches):** +5% to +10% bonus gem drop rate when smashing. **Mutually exclusive with American Sports Ball Jersey** (dynamically disables and grays out the Jersey when active).
 * **Yellow Ances (Ancestral Totem of Wisdom):** +5% to +10% chance of receiving double XP per farming action.
 
-### 5. Item Effects and Consumables
-* **American Sports Ball Jersey:** 10% bonus gems on smashing (cannot be used with Red Ances).
+### 5. Item Effects, Consumables & Drop Caps
+* **American Sports Ball Jersey:** 10% bonus gems on smashing. **Mutually exclusive with Red Ances** (dynamically disables and grays out the Red Ances option when equipped).
 * **Buddy Block Head:** 2% bonus block drop chance.
 * **Cosmic Cape:** 0.001% (1 in 100,000) Comet Dust drop rate per block destroyed.
 * **Dreamcatcher Staff:** 2% bonus harvest blocks for items with Rarity < 100.
 * **Galaxy Skin:** 10% bonus block drop chance.
 * **Harvester / Harvester of Sorrows:** 10% bonus harvest blocks for items with Rarity < 100.
 * **Winter Wishing Star:** 2% bonus block drop chance.
-* **Emerald Lock:** 10% chance of adding an additional gem drop upon breaking blocks.
-* **Lucky Clover / Songpyeon:** 10% bonus block chance and 10% chance to multiply gem drops by up to 5x.
+* **Emerald Lock:** 10% chance of adding an additional flat gem drop (+0.10 gems/block) upon breaking blocks.
+* **Lucky Clover / Songpyeon:** 10% bonus block chance and 10% chance to multiply gem drops by up to 5x (+200% average net gain on trigger).
+* **30% Bonus Block Hard Cap:** Enforces the in-game ~30% hard ceiling on cumulative bonus block drop probabilities across all equipped items and roles.
 
-### 6. Analytics and Data Export
-* **Key Performance Indicators:** Real-time result for World locks, Net Seed Gain, Total Gems, Comet Dust, XP, and Total Growth Time.
+### 6. Analytics, UI Transparency & Data Export
+* **Conservative Floor Rounding:** All primary KPI metrics—including Total Profit (WLs), Net Seed Gain, Total Gems Farmed, and Comet Dust WL value—are strictly rounded down (`Math.floor`) to whole integers to provide conservative, guaranteed baseline projections.
+* **Consolidated Gem Breakdown:** Displays a unified **Bonus Gems** aggregate row under Harvest & Smashing Multipliers that combines all active item, role, and consumable modifiers additively.
+* **Interactive Tooltip:** Features an interactive `?` popover next to the **Compound Smash Multiplier** explaining recursive block-break cycles without visual clutter.
 * **Interactive Views:** Tabbed navigation between Calculation Mechanics, Cycle-by-Cycle Data Tables, and Visual Growth Progress Bars.
 * **Export Utilities:** Direct CSV export functionality and formatted clipboard summary copying.
 
@@ -60,7 +63,7 @@ Supports level 1 through 6 for ancestral items and their corresponding effects:
 
 ## Mathematical Specifications & Engine Logic
 
-All calculations simulate estimated values derived from sources from the Growtopia Wiki, Reddit threads, and Youtube videos.
+All calculations simulate estimated values derived from community research, verified Discord developer statements, and documentation from the Growtopia Wiki.
 
 ### 1. Tree Growth Duration
 Growth time in seconds ($T$) as a function of item rarity ($R$):
@@ -86,14 +89,16 @@ Base XP earned per action ($XP_{\text{base}}$):
 
 $$XP_{\text{base}} = 1 + \left\lfloor \frac{R}{5} \right\rfloor$$
 
-### 5. Recursive Smashing Multiplier
-Breaking a block yields seeds, gems, and occasionally additional blocks. Because bonus blocks can themselves be broken recursively, the total effective blocks smashed ($B_{\text{effective}}$) is modeled as a geometric series resolved via the compound smash denominator:
+### 5. Recursive Smashing Multiplier & Drop Capping
+Breaking a block yields seeds, gems, and occasionally additional blocks. Because bonus blocks can themselves be broken recursively, the total effective blocks smashed ($B_{\text{effective}}$) is modeled as a geometric series.
 
-$$D_{\text{smash}} = (1 - B_{\text{base}}) \times \prod_{i} (1 - M_i)$$
+Active bonus block probabilities from equipment and roles ($M_i$) are capped at a 30% maximum:
 
-Where:
-* $B_{\text{base}} = \frac{1}{12}$ (Standard block return rate)
-* $M_i$ represents all active additive drop chances (Blue Ancestor, Builder Role, Buddy Block Head, Galaxy Skin, Winter Wishing Star, Lucky Clover).
+$$P_{\text{bonus\_capped}} = \min\left(\sum M_i, 0.30\right)$$
+
+The compound smash denominator ($D_{\text{smash}}$) accounts for the standard base return rate ($B_{\text{base}} = \frac{1}{12}$) and capped bonus rolls:
+
+$$D_{\text{smash}} = (1 - B_{\text{base}}) \times (1 - P_{\text{bonus\_capped}})$$
 
 The compound block break multiplier is:
 
@@ -113,4 +118,6 @@ $$S_{\text{smash}} = B_{\text{effective}} \times 0.25$$
 * **Styling Framework:** Tailwind CSS (CDN distribution)
 * **Icons:** Inline SVGs (zero external icon library dependencies)
 
-*Note: The codebase for this calculator was completely written and generated by Google Gemini.*
+---
+
+*Note: The code used for this calculator was completely written, designed, and coded by Google Gemini.*
