@@ -373,6 +373,18 @@
       const combinedExtraGemChance = extraGemChance;
       const extraGemRate = gemBaseYield * BASE_RATES.blockGems * combinedExtraGemChance;
 
+      // Cumulative Bonus Gem Chance across all active equipment and effects
+      let totalBonusGemChance = combinedExtraGemChance;
+      if (inputs.elock) {
+        totalBonusGemChance += BASE_RATES.elock; // 10%
+      }
+      if (inputs.clover) {
+        totalBonusGemChance += BASE_RATES.clover.gemChance; // 10%
+      }
+      if (farmerBonusRate > 0) {
+        totalBonusGemChance += farmerBonusRate; // 0.5% - 3.0%
+      }
+
       // Yellow Ances: Lv 1 (5%), Lv 2 (6%), Lv 3 (7%), Lv 4 (8%), Lv 5 (9%), Lv 6 (10%) double XP chance
       let totemXpMultiplier = 0;
       if (artifact === 'totem') {
@@ -402,6 +414,7 @@
         cloverGemBonus,
         combinedExtraGemChance,
         extraGemRate,
+        totalBonusGemChance,
         isJerseyOverridingLens,
         totemXpMultiplier,
       };
@@ -494,7 +507,7 @@
           gems: Math.floor(cycleGems),
           cometDust: Number(cycleDust.toFixed(4)),
           xp: Math.floor(cycleXp),
-          worldLocks: Number(cycleWls.toFixed(2)),
+          worldLocks: Math.floor(cycleWls),
         });
 
         if (inputs.extras) {
@@ -503,7 +516,7 @@
             totalNetSeeds: Math.floor(totals.netSeedGain),
             totalGems: totals.gems,
             totalDust: Number(totals.dust.toFixed(4)),
-            totalWls: Number(totals.worldLocks.toFixed(2)),
+            totalWls: Math.floor(totals.worldLocks),
           });
         }
 
@@ -512,7 +525,9 @@
       }
 
       totals.seeds = Math.floor(currentSeeds);
-      totals.worldLocks = Number(totals.worldLocks.toFixed(2));
+      totals.netSeedGain = Math.floor(totals.netSeedGain);
+      totals.gems = Math.floor(totals.gems);
+      totals.worldLocks = Math.floor(totals.worldLocks);
       totals.formattedTime = GrowtopiaMath.formatDuration(totals.timeSeconds);
 
       return {
@@ -563,6 +578,7 @@
 
       const [activeTab, setActiveTab] = useState('summary');
       const [copied, setCopied] = useState(false);
+      const [showSmashTooltip, setShowSmashTooltip] = useState(false);
 
       const result = useMemo(() => calculateFarming(inputs), [inputs]);
 
@@ -626,7 +642,7 @@
 Simulated Cycles: ${inputs.times}
 Item Rarity: ${inputs.rarity}
 Total Final Seeds: ${result.totals.seeds.toLocaleString()}
-Net Seed Profit: +${Math.floor(result.totals.netSeedGain).toLocaleString()}
+Net Seed Profit: +${result.totals.netSeedGain.toLocaleString()}
 Total Gems Earned: ${result.totals.gems.toLocaleString()}
 Comet Dust Earned: ${result.totals.dust.toFixed(4)}
 Total XP: ${result.totals.xp.toLocaleString()}
@@ -1279,8 +1295,9 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                   <div className="flex items-center justify-between text-amber-400 mb-2">
                     <span className="text-xs font-bold uppercase tracking-wider">Total Profit</span>
                   </div>
+                  {}
                   <div className="text-2xl font-black text-amber-300 font-mono tracking-tight">
-                    {result.totals.worldLocks.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {result.totals.worldLocks.toLocaleString()}
                     <span className="text-xs font-semibold text-amber-400 ml-1">WLs</span>
                   </div>
                   <p className="text-[11px] text-amber-200/60 mt-1">
@@ -1295,7 +1312,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                   </div>
                   <div className="text-2xl font-black text-emerald-300 font-mono tracking-tight">
                     {result.totals.netSeedGain >= 0 ? '+' : ''}
-                    {Math.floor(result.totals.netSeedGain).toLocaleString()}
+                    {result.totals.netSeedGain.toLocaleString()}
                   </div>
                   <p className="text-[11px] text-emerald-200/60 mt-1">
                     Final stock: {result.totals.seeds.toLocaleString()} seeds
@@ -1311,7 +1328,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                     {result.totals.gems.toLocaleString()}
                   </div>
                   <p className="text-[11px] text-cyan-200/60 mt-1">
-                    {(inputs.gemwl > 0 ? (result.totals.gems / inputs.gemwl).toFixed(1) : 0)} WLs gem value
+                    {(inputs.gemwl > 0 ? Math.floor(result.totals.gems / inputs.gemwl).toLocaleString() : 0)} WLs gem value
                   </p>
                 </div>
 
@@ -1324,7 +1341,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                     {result.totals.dust.toFixed(3)}
                   </div>
                   <p className="text-[11px] text-pink-200/60 mt-1">
-                    {inputs.dustwl > 0 ? `${(result.totals.dust / inputs.dustwl).toFixed(2)} WLs value` : 'Cosmic Cape drop'}
+                    {inputs.dustwl > 0 ? `${Math.floor(result.totals.dust / inputs.dustwl).toLocaleString()} WLs value` : 'Cosmic Cape drop'}
                   </p>
                 </div>
 
@@ -1430,15 +1447,11 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                               )}
                             </span>
                           </div>
-                          <div className="flex justify-between py-1 border-b border-slate-850">
-                            <span className="text-slate-400">Compound Smash Multiplier:</span>
-                            <span className="text-emerald-400 font-mono font-semibold">{result.ctx.compoundSmashMultiplier.toFixed(3)}x</span>
-                          </div>
                           <div className="flex justify-between py-1 border-b border-slate-850 items-center">
-                            <span className="text-slate-400">Rarity Bonus Gem Chance:</span>
+                            <span className="text-slate-400">Bonus Gems:</span>
                             <span className="flex items-center gap-1 font-mono">
-                              <span className={result.ctx.combinedExtraGemChance > 0 ? 'text-cyan-400 font-semibold' : 'text-slate-500'}>
-                                {result.ctx.combinedExtraGemChance > 0 ? `+${(result.ctx.combinedExtraGemChance * 100).toFixed(1)}%` : 'Inactive'}
+                              <span className={result.ctx.totalBonusGemChance > 0 ? 'text-cyan-400 font-semibold' : 'text-slate-500'}>
+                                {result.ctx.totalBonusGemChance > 0 ? `+${(result.ctx.totalBonusGemChance * 100).toFixed(1)}%` : '0.0%'}
                               </span>
                               {result.ctx.isJerseyOverridingLens && (
                                 <span className="text-[10px] text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
@@ -1447,23 +1460,36 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                               )}
                             </span>
                           </div>
-                          <div className="flex justify-between py-1 border-b border-slate-850 items-center">
-                            <span className="text-slate-400">Emerald Lock (+1 Flat Gem):</span>
-                            <span className={`font-mono ${inputs.elock ? 'text-emerald-400 font-semibold' : 'text-slate-500'}`}>
-                              {inputs.elock ? '+0.10 gems / block' : 'Inactive'}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-1 border-b border-slate-850 items-center">
-                            <span className="text-slate-400">Lucky Clover (5x Multiplier):</span>
-                            <span className={`font-mono ${inputs.clover ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
-                              {inputs.clover ? '10% chance for up to 5x' : 'Inactive'}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-1 border-b border-slate-850 items-center">
-                            <span className="text-slate-400">Farmer Role Gem Boost:</span>
-                            <span className={`font-mono ${inputs.farmerRole && result.ctx.farmerBonusRate > 0 ? 'text-emerald-400 font-semibold' : 'text-slate-500'}`}>
-                              {inputs.farmerRole && result.ctx.farmerBonusRate > 0 ? `+${(result.ctx.farmerBonusRate * 100).toFixed(1)}% harvest gems` : 'Inactive'}
-                            </span>
+                          <div className="flex justify-between py-1 border-b border-slate-850 items-center relative">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-slate-400">Compound Smash Multiplier:</span>
+                              <div
+                                className="relative inline-flex items-center"
+                                onMouseEnter={() => setShowSmashTooltip(true)}
+                                onMouseLeave={() => setShowSmashTooltip(false)}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowSmashTooltip(prev => !prev);
+                                  }}
+                                  className="w-4 h-4 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 border border-slate-700 text-[10px] font-bold flex items-center justify-center transition cursor-pointer"
+                                  aria-label="Explain Compound Smash Multiplier"
+                                >
+                                  ?
+                                </button>
+                                {showSmashTooltip && (
+                                  <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute left-0 bottom-full mb-2 w-64 p-3 bg-slate-900/95 backdrop-blur-sm border border-emerald-500/40 text-slate-200 text-[11px] leading-relaxed rounded-xl shadow-2xl z-30 font-sans"
+                                  >
+                                    Calculates the full recursive loop of smashing: broken blocks drop new blocks, which you place and smash again until your inventory is empty.
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-emerald-400 font-mono font-semibold">{result.ctx.compoundSmashMultiplier.toFixed(3)}x</span>
                           </div>
                           <div className="flex justify-between py-1 border-b border-slate-850">
                             <span className="text-slate-400">Harvester Active:</span>
@@ -1485,35 +1511,36 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                         <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                           <span>Profit Breakdown</span>
                         </h4>
+                        {}
                         <div className="space-y-2 text-xs">
                           <div className="flex justify-between py-1 border-b border-slate-850">
                             <span className="text-slate-400">Seed Profit Value:</span>
                             <span className="text-amber-300 font-mono">
                               {inputs.seedswl > 0 
-                                ? `${(Math.max(0, result.totals.netSeedGain) / inputs.seedswl).toFixed(2)} WLs`
-                                : '0.00 WLs (0/WL)'}
+                                ? `${Math.floor(Math.max(0, result.totals.netSeedGain) / inputs.seedswl).toLocaleString()} WLs`
+                                : '0 WLs (0/WL)'}
                             </span>
                           </div>
                           <div className="flex justify-between py-1 border-b border-slate-850">
                             <span className="text-slate-400">Gem Profit Value:</span>
                             <span className="text-amber-300 font-mono">
                               {inputs.gemwl > 0 
-                                ? `${(result.totals.gems / inputs.gemwl).toFixed(2)} WLs`
-                                : '0.00 WLs (0/WL)'}
+                                ? `${Math.floor(result.totals.gems / inputs.gemwl).toLocaleString()} WLs`
+                                : '0 WLs (0/WL)'}
                             </span>
                           </div>
                           <div className="flex justify-between py-1 border-b border-slate-850">
                             <span className="text-slate-400">Dust Profit Value:</span>
                             <span className="text-pink-300 font-mono">
                               {inputs.dustwl > 0 
-                                ? `${(result.totals.dust / inputs.dustwl).toFixed(2)} WLs`
-                                : '0.00 WLs (0/WL)'}
+                                ? `${Math.floor(result.totals.dust / inputs.dustwl).toLocaleString()} WLs`
+                                : '0 WLs (0/WL)'}
                             </span>
                           </div>
                           <div className="flex justify-between py-1">
                             <span className="text-slate-400">Average Profit / Cycle:</span>
                             <span className="text-emerald-400 font-mono font-semibold">
-                              {(result.totals.worldLocks / Math.max(1, inputs.times)).toFixed(2)} WLs / cycle
+                              {Math.floor(result.totals.worldLocks / Math.max(1, inputs.times)).toLocaleString()} WLs / cycle
                             </span>
                           </div>
                         </div>
@@ -1540,6 +1567,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                           <th className="py-2.5 px-3">WLs</th>
                         </tr>
                       </thead>
+                      {}
                       <tbody className="divide-y divide-slate-800/60 font-mono">
                         {result.cycles.map((c) => (
                           <tr key={c.cycle} className="hover:bg-slate-850/60 transition">
@@ -1551,7 +1579,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                             <td className="py-2.5 px-3 text-cyan-300">{c.gems.toLocaleString()}</td>
                             <td className="py-2.5 px-3 text-pink-300">{c.cometDust.toFixed(4)}</td>
                             <td className="py-2.5 px-3 text-purple-300">{c.xp.toLocaleString()}</td>
-                            <td className="py-2.5 px-3 text-amber-300 font-semibold">{c.worldLocks.toFixed(2)}</td>
+                            <td className="py-2.5 px-3 text-amber-300 font-semibold">{c.worldLocks.toLocaleString()}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1575,7 +1603,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                             <div key={c.cycle} className="space-y-1">
                               <div className="flex justify-between text-[11px] font-mono">
                                 <span className="text-slate-300 font-bold">Cycle {c.cycle}</span>
-                                <span className="text-emerald-300">{c.endSeeds.toLocaleString()} seeds (+{c.seedProfit}) • {c.worldLocks.toFixed(2)} WLs</span>
+                                <span className="text-emerald-300">{c.endSeeds.toLocaleString()} seeds (+{c.seedProfit}) • {c.worldLocks.toLocaleString()} WLs</span>
                               </div>
                               <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
                                 <div
