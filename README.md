@@ -15,7 +15,7 @@ The project is distributed as a self-contained, single-file web application requ
 ## Features
 
 ### 1. Common Farmables Presets
-* Integrated database containing 26 standard farmable items (e.g., Laser Grid, Chandelier, Pepper Tree, Fish Tank, Clouds Background).
+* Integrated database containing 26 standard farmable items (e.g., Fish Tank, Pepper Tree, Pinball Bumper, Laser Grid, Chandelier, Magic Bell, Clouds Background, and more!).
 * Automatic population of item rarity and baseline statistics upon selection.
 * Dedicated modal interface with search and reset capabilities.
 
