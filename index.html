@@ -194,7 +194,8 @@
 
     const BASE_RATES = Object.freeze({
       harvester: 0.10,         // 10% extra harvest blocks from Harvester / Harvester of Sorrows (rarity < 100)
-      elock: 0.10,             // 10% chance of adding an extra gem drop when breaking blocks
+      elock: 0.10,             // 10% chance of adding an extra flat gem drop when breaking blocks
+      arroz: 0.10,             // 10% chance of adding an extra flat gem drop when breaking blocks (Arroz Con Pollo)
       cosmicCape: 0.00001,     // 0.001% chance of Comet Dust per smashed block (0.001 / 100)
       galaxySkin: 0.10,        // 10% extra blocks from Galaxy Skin
       winterWishingStar: 0.02, // 2% extra blocks from Winter Wishing Star
@@ -341,6 +342,8 @@
 
       // Emerald Lock: 10% chance of adding an extra gem drop when breaking blocks (+0.10 gems / block)
       const elockRate = inputs.elock ? BASE_RATES.elock : 0;
+      // Arroz Con Pollo: 10% chance of adding an extra gem drop when breaking blocks (+0.10 gems / block)
+      const arrozRate = inputs.arroz ? BASE_RATES.arroz : 0;
       const cosmicCapeRate = inputs.cosmicCape ? BASE_RATES.cosmicCape : 0;
 
       // Lucky Clover / Songpyeon gem bonus (10% chance for up to 5x gems)
@@ -350,7 +353,7 @@
 
       // ==========================================
       // BONUS GEMS: LENS & JERSEY NON-STACKING
-      // (Emerald Lock & Clover remain fully additive)
+      // (Emerald Lock, Arroz Con Pollo & Clover remain fully additive)
       // ==========================================
       let extraGemChance = 0;
       let isJerseyOverridingLens = false;
@@ -373,8 +376,11 @@
       const combinedExtraGemChance = extraGemChance;
       const extraGemRate = gemBaseYield * BASE_RATES.blockGems * combinedExtraGemChance;
 
-      // Cumulative Bonus Gem Chance across all active equipment and effects
+      // Cumulative Bonus Gem Chance across all active equipment, roles, and effects
       let totalBonusGemChance = combinedExtraGemChance;
+      if (inputs.arroz) {
+        totalBonusGemChance += BASE_RATES.arroz; // 10%
+      }
       if (inputs.elock) {
         totalBonusGemChance += BASE_RATES.elock; // 10%
       }
@@ -410,6 +416,7 @@
         farmerBonusRate,
         builderBonusRate,
         elockRate,
+        arrozRate,
         cosmicCapeRate,
         cloverGemBonus,
         combinedExtraGemChance,
@@ -469,9 +476,10 @@
         const farmerHarvestBonusGems = baseHarvestGems * ctx.farmerBonusRate;
         const baseSmashGems = ctx.gemBaseYield * BASE_RATES.blockGems * effectiveBlocks;
 
-        // Additive stacking of gem bonuses (Emerald lock + Clover + Lens/Jersey)
+        // Additive stacking of gem bonuses (Emerald lock + Arroz Con Pollo + Clover + Lens/Jersey)
         const bonusGems = farmerHarvestBonusGems +
                           (effectiveBlocks * ctx.elockRate) +
+                          (effectiveBlocks * ctx.arrozRate) +
                           (effectiveBlocks * ctx.cloverGemBonus) +
                           (effectiveBlocks * ctx.extraGemRate);
         const cycleGems = baseHarvestGems + baseSmashGems + bonusGems;
@@ -563,6 +571,7 @@
         dcs: false,
         clover: false,
         elock: false,
+        arroz: false,
         cosmicCape: false,
         galaxySkin: false,
         winterWishingStar: false,
@@ -627,6 +636,7 @@
           dcs: false,
           clover: false,
           elock: false,
+          arroz: false,
           cosmicCape: false,
           galaxySkin: false,
           winterWishingStar: false,
@@ -649,7 +659,6 @@ Total XP: ${result.totals.xp.toLocaleString()}
 Total Profit: ${result.totals.worldLocks.toLocaleString()} WLs
 Total Growth Duration: ${result.totals.formattedTime}`;
 
-        // Robust fallback for iFrame clipboard restrictions
         try {
           const textArea = document.createElement("textarea");
           textArea.value = text;
@@ -928,7 +937,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                 </div>
               </div>
 
-              {/* 2ND ROW: ECONOMY RATES (EXPANDED ACROSS SCREEN) */}
+              {/* 2ND ROW: ECONOMY RATES */}
               <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <div>
@@ -984,7 +993,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                 </div>
               </div>
 
-              {/* 3RD ROW: ROLE UP! SECTION (EXPANDED ACROSS SCREEN) */}
+              {/* 3RD ROW: ROLE UP! SECTION */}
               <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <div>
@@ -1097,7 +1106,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                 </div>
               </div>
 
-              {/* 4TH ROW: HIDDEN RICHES & ITEMS (EXPANDED ACROSS SCREEN) */}
+              {/* 4TH ROW: HIDDEN RICHES & ITEMS */}
               <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 space-y-5">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <div>
@@ -1244,13 +1253,18 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                     </div>
                   </div>
 
-                  {/* Effects (Alphabetical Order) */}
+                  {/* Effects (Alphabetical Order: Arroz Con Pollo, Emerald Lock, Lucky Clover) */}
                   <div className="space-y-3 pt-3 border-t border-slate-800/80">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Effects</label>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                       {[
+                        { 
+                          key: 'arroz', 
+                          label: 'Arroz Con Pollo', 
+                          desc: '10% bonus gems.', 
+                        },
                         { 
                           key: 'elock', 
                           label: 'Emerald Lock', 
@@ -1287,7 +1301,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                 </div>
               </div>
 
-              {/* 5TH ROW: KPI SUMMARY METRICS (MOVED TOWARDS THE BOTTOM) */}
+              {/* 5TH ROW: KPI SUMMARY METRICS */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
                 
                 {/* Total Profit */}
@@ -1295,7 +1309,6 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                   <div className="flex items-center justify-between text-amber-400 mb-2">
                     <span className="text-xs font-bold uppercase tracking-wider">Total Profit</span>
                   </div>
-                  {}
                   <div className="text-2xl font-black text-amber-300 font-mono tracking-tight">
                     {result.totals.worldLocks.toLocaleString()}
                     <span className="text-xs font-semibold text-amber-400 ml-1">WLs</span>
@@ -1373,7 +1386,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
 
               </div>
 
-              {/* 6TH ROW: BOTTOMMOST DETAILED SECTION (HARVEST MULTIPLIERS, BREAKDOWN, CYCLE TABLE & GRAPH) */}
+              {/* 6TH ROW: BOTTOMMOST DETAILED SECTION */}
               <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
                 
                 {/* Tab Navigation Header */}
@@ -1415,7 +1428,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                   </div>
                 </div>
 
-                {/* TAB 1: SUMMARY & FORMULA METRICS (HARVEST MULTIPLIERS & PROFIT BREAKDOWN) */}
+                {/* TAB 1: SUMMARY & FORMULA METRICS */}
                 {activeTab === 'summary' && (
                   <div className="p-5 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1511,7 +1524,6 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                         <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                           <span>Profit Breakdown</span>
                         </h4>
-                        {}
                         <div className="space-y-2 text-xs">
                           <div className="flex justify-between py-1 border-b border-slate-850">
                             <span className="text-slate-400">Seed Profit Value:</span>
@@ -1567,7 +1579,6 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                           <th className="py-2.5 px-3">WLs</th>
                         </tr>
                       </thead>
-                      {}
                       <tbody className="divide-y divide-slate-800/60 font-mono">
                         {result.cycles.map((c) => (
                           <tr key={c.cycle} className="hover:bg-slate-850/60 transition">
