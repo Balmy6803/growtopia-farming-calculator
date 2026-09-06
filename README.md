@@ -15,7 +15,7 @@ The project is distributed as a self-contained, single-file web application requ
 ## Features
 
 ### 1. Common Farmables Presets
-* Integrated database containing 26 standard farmable items (e.g., Fish Tank, Pepper Tree, Pinball Bumper, Laser Grid, Chandelier, Magic Bell, Clouds Background, and more!).
+* Integrated database containing 26 standard farmable items (e.g., Laser Grid, Chandelier, Pepper Tree, Fish Tank, Clouds Background).
 * Automatic population of item rarity and baseline statistics upon selection.
 * Dedicated modal interface with search and reset capabilities.
 
@@ -42,14 +42,15 @@ Supports level 1 through 6 for ancestral items with dynamic UI mutual exclusion:
 
 ### 5. Item Effects, Consumables & Drop Caps
 * **American Sports Ball Jersey:** 10% bonus gems on smashing. **Mutually exclusive with Red Ances** (dynamically disables and grays out the Red Ances option when equipped).
+* **Arroz Con Pollo:** 10% bonus gems (grants the Food: Breaking Gems mod, offering a 10% chance of an extra flat gem drop per broken block).
 * **Buddy Block Head:** 2% bonus block drop chance.
 * **Cosmic Cape:** 0.001% (1 in 100,000) Comet Dust drop rate per block destroyed.
 * **Dreamcatcher Staff:** 2% bonus harvest blocks for items with Rarity < 100.
+* **Emerald Lock:** 10% chance of adding an additional flat gem drop (+0.10 gems/block) upon breaking blocks.
 * **Galaxy Skin:** 10% bonus block drop chance.
 * **Harvester / Harvester of Sorrows:** 10% bonus harvest blocks for items with Rarity < 100.
-* **Winter Wishing Star:** 2% bonus block drop chance.
-* **Emerald Lock:** 10% chance of adding an additional flat gem drop (+0.10 gems/block) upon breaking blocks.
 * **Lucky Clover / Songpyeon:** 10% bonus block chance and 10% chance to multiply gem drops by up to 5x (+200% average net gain on trigger).
+* **Winter Wishing Star:** 2% bonus block drop chance.
 * **30% Bonus Block Hard Cap:** Enforces the in-game ~30% hard ceiling on cumulative bonus block drop probabilities across all equipped items and roles.
 
 ### 6. Analytics, UI Transparency & Data Export
