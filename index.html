@@ -196,7 +196,7 @@
       harvester: 0.10,         // 10% extra harvest blocks from Harvester / Harvester of Sorrows (rarity < 100)
       elock: 0.10,             // 10% chance of adding an extra flat gem drop when breaking blocks
       arroz: 0.10,             // 10% chance of adding an extra flat gem drop when breaking blocks (Arroz Con Pollo)
-      cosmicCape: 0.00001,     // 0.001% chance of Comet Dust per smashed block (0.001 / 100)
+      cosmicCape: 0.001,       // 0.1% (1 in 1000) chance of Comet Dust per smashed block
       galaxySkin: 0.10,        // 10% extra blocks from Galaxy Skin
       winterWishingStar: 0.02, // 2% extra blocks from Winter Wishing Star
       jersey: 0.10,            // 10% extra gems from American Sports Ball Jersey
@@ -500,7 +500,7 @@
         // Running totals
         totals.netSeedGain += netSeedProfit;
         totals.blocks += effectiveBlocks;
-        totals.gems += Math.floor(cycleGems);
+        totals.gems += cycleGems;
         totals.dust += cycleDust;
         totals.xp += Math.floor(cycleXp);
         totals.timeSeconds += ctx.growthSeconds;
@@ -522,7 +522,7 @@
           extras.push({
             cycle: i + 1,
             totalNetSeeds: Math.floor(totals.netSeedGain),
-            totalGems: totals.gems,
+            totalGems: Math.floor(totals.gems),
             totalDust: Number(totals.dust.toFixed(4)),
             totalWls: Math.floor(totals.worldLocks),
           });
@@ -1190,7 +1190,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                         { 
                           key: 'cosmicCape', 
                           label: 'Cosmic Cape', 
-                          desc: '0.001% chance of comet dust.', 
+                          desc: '0.1% to drop comet dust.', 
                         },
                         { 
                           key: 'dcs', 
@@ -1581,7 +1581,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono">
                         {result.cycles.map((c) => (
-                          <tr key={c.cycle} className="hover:bg-slate-850/60 transition">
+                          <tr key={c.cycle} className="hover:bg-slate-855/60 transition">
                             <td className="py-2.5 px-3 font-bold text-slate-400">{c.cycle}</td>
                             <td className="py-2.5 px-3 text-slate-300">{c.startSeeds.toLocaleString()}</td>
                             <td className="py-2.5 px-3 text-emerald-300 font-semibold">{c.endSeeds.toLocaleString()}</td>
