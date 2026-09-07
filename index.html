@@ -120,30 +120,6 @@
       </svg>
     );
 
-    const IconOrbit = ({ className = "w-4 h-4" }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3" /><circle cx="19" cy="5" r="2" /><circle cx="5" cy="19" r="2" /><path d="M10.4 21.9a10 10 0 0 0 9.94-8.4" /><path d="M13.6 2.1a10 10 0 0 0-9.94 8.4" />
-      </svg>
-    );
-
-    const IconAlertCircle = ({ className = "w-4 h-4" }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" />
-      </svg>
-    );
-
-    const IconHammer = ({ className = "w-4 h-4" }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9" /><path d="M17.64 15 22 10.64" /><path d="m20.91 3.26-6.36 6.36" /><path d="m18.08 7.51-2.12-2.12" /><path d="m13.84 3.26 2.12 2.12" />
-      </svg>
-    );
-
-    const IconUserCheck = ({ className = "w-4 h-4" }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" />
-      </svg>
-    );
-
     const IconSearch = ({ className = "w-4 h-4" }) => (
       <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -153,6 +129,12 @@
     const IconX = ({ className = "w-4 h-4" }) => (
       <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    );
+
+    const IconHammer = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9" /><path d="M17.64 15 22 10.64" /><path d="m20.91 3.26-6.36 6.36" /><path d="m18.08 7.51-2.12-2.12" /><path d="m13.84 3.26 2.12 2.12" />
       </svg>
     );
 
@@ -193,6 +175,7 @@
     // ==========================================
 
     const BASE_RATES = Object.freeze({
+      appleStrudel: 0.05,      // 5% tree growth duration reduction
       harvester: 0.10,         // 10% extra harvest blocks from Harvester / Harvester of Sorrows (rarity < 100)
       elock: 0.10,             // 10% chance of adding an extra flat gem drop when breaking blocks
       arroz: 0.10,             // 10% chance of adding an extra flat gem drop when breaking blocks (Arroz Con Pollo)
@@ -290,6 +273,11 @@
       if (artifact === 'seed') {
         const seedBonus = (lvl * 2) / 100;
         growthSeconds *= (1 - seedBonus);
+      }
+
+      // Apple Strudel: 5% tree growth reduction
+      if (inputs.appleStrudel) {
+        growthSeconds *= (1 - BASE_RATES.appleStrudel);
       }
 
       // Role Up bonus rates
@@ -570,6 +558,7 @@
         buddy: false,
         dcs: false,
         clover: false,
+        appleStrudel: false,
         elock: false,
         arroz: false,
         cosmicCape: false,
@@ -635,6 +624,7 @@
           buddy: false,
           dcs: false,
           clover: false,
+          appleStrudel: false,
           elock: false,
           arroz: false,
           cosmicCape: false,
@@ -798,7 +788,7 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                       Change Preset
                     </button>
                   </div>
-                ) : (
+) : (
                   <div className="p-4 bg-slate-950/40 border border-dashed border-slate-800 rounded-xl text-center">
                     <p className="text-xs text-slate-400">
                       No farmable selected. Click <span className="text-emerald-400 font-semibold">"Add:"</span> to browse and select a preset.
@@ -1253,13 +1243,18 @@ Total Growth Duration: ${result.totals.formattedTime}`;
                     </div>
                   </div>
 
-                  {/* Effects (Alphabetical Order: Arroz Con Pollo, Emerald Lock, Lucky Clover) */}
+                  {/* Effects (Alphabetical Order: Apple Strudel, Arroz Con Pollo, Emerald Lock, Lucky Clover) */}
                   <div className="space-y-3 pt-3 border-t border-slate-800/80">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Effects</label>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                       {[
+                        { 
+                          key: 'appleStrudel', 
+                          label: 'Apple Strudel', 
+                          desc: '5% tree growth reduction.', 
+                        },
                         { 
                           key: 'arroz', 
                           label: 'Arroz Con Pollo', 
